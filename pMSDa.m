@@ -21,7 +21,7 @@ function [result] = pMSDa(rawData,param,comd)
     vel = zeros(leng,1);
     
     for m = 2:1:leng
-        vel(m) = pdist([rawData(m-1,:);rawData(m,:)]);
+        vel(m) = pdist(rawData(m-1:m,:));
     end
     
     for m = 1:1:count
@@ -30,7 +30,7 @@ function [result] = pMSDa(rawData,param,comd)
         for n = 1:1:param(m,2)
             rs{n} = [rs{n}(:,1),vel(rs{n}(:,1),1),rs{n}(:,2:param(m,1)+1)];
         end
-        result{m} = NPMotionTest(iT,param(m,1),param(m,1),param(m,2),rawData,rs,centricSet);
+        result{m} = NPMotionTest(iT,param(m,1),param(m,1),param(m,2),vel,rs,centricSet);
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
         figure;
         result{m}.plotTest();
