@@ -1,5 +1,5 @@
 classdef NPMotionTest
-    
+   
     properties
         iterationTime;
         timeDelay;
@@ -9,11 +9,11 @@ classdef NPMotionTest
         centricSet;
     end
     
-    properties(Access = private)
+    properties (Access = private)
         resultDataCell;
     end
-    
-    properties(Dependent)
+  
+    properties (Dependent)
         result;  
     end
     
@@ -38,9 +38,7 @@ classdef NPMotionTest
                 subplot(obj.k,4,4*m);
                 plot(obj.centricSet(m,:));
                 title(strcat('Avarage curve for grounp',num2str(m)));
-            end
-            
-            
+            end            
         end
         function [] = plotTest(obj,varargin)
             plot(obj.rawDataArray(:,1));
