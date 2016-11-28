@@ -7,6 +7,7 @@ classdef NPMotionTest
         k;
         rawDataArray;
         centricSet;
+        name;
     end
     
     properties (Access = private)
@@ -18,7 +19,8 @@ classdef NPMotionTest
     end
     
     methods
-        function obj = NPMotionTest(iT,tD,d,k,raw,result,cs)
+        function obj = NPMotionTest(name,iT,tD,d,k,raw,result,cs)
+            obj.name = name;
             obj.iterationTime = iT;
             obj.timeDelay = tD;
             obj.dimension = d;

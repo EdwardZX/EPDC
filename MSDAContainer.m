@@ -1,6 +1,7 @@
 classdef MSDAContainer < handle
     properties 
         currentPointIndex;
+        name;
         hFullTrace;
         hLocalTrace;
         hMSD;
@@ -28,6 +29,7 @@ classdef MSDAContainer < handle
     methods
         function obj = MSDAContainer(rawData,motionTest,varargin)
             obj.param = motionTest.dimension;
+            obj.name = motionTest.name;
             obj.trajectory = rawData;
             obj.result = motionTest.result();
             obj.velocity = motionTest.rawDataArray;
@@ -82,7 +84,12 @@ classdef MSDAContainer < handle
                     end
                 end
             end
-            h = plot(data(:,3:obj.param+2));
+            if strcmp(obj.name,'MSD')
+                h = plot(data(:,3:obj.param+2));
+            else
+                h = plot(data(:,2:obj.param+1));
+            end
+            
             hold off;
         end
         function h = plotVelocity(obj,isReserve)
@@ -104,11 +111,11 @@ classdef MSDAContainer < handle
         end
         
         function changePoint(obj,index)
-            if (index > (obj.param * 2) && (index < length(obj.trajectory)))
+            if (index >= (obj.param * 2) && (index < length(obj.trajectory)))
                 obj.currentPointIndex = index;
                 obj.update(1);
             else
-                error('Invalid Ponit');
+                errordlg('Error: Invalid Point!','MSD Analysis Container');
             end
         end
         

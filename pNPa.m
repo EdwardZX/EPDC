@@ -19,7 +19,7 @@ function [ result ] = pNPa(rawData,param,comd)
     for m=1:1:count
         data = rcTimeDelaySet(rawData,param(m,1),param(m,2));
         [rs,centricSet,iT] = kMeans(data,param(m,3),comd,param(m,4));
-        result{m} = NPMotionTest(iT,param(m,1),param(m,2),param(m,3),rawData,rs,centricSet);
+        result{m} = NPMotionTest('EDM',iT,param(m,1),param(m,2),param(m,3),rawData,rs,centricSet);
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
         figure;
         result{m}.plotTest();
