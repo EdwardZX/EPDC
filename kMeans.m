@@ -13,7 +13,7 @@ function [ result, finalCentric, iterationTime ] = kMeans( dataSet,k,comd,vararg
             order = varargin{1};
             fun = @(c,d,p)pdist2(c,d,'minkowski',p,'Smallest',1)
         case 'C'
-            fun = @(x,y,p)pdist2(c,d,'correlation','Smallest',1);
+            fun = @(c,d,p)pdist2(c,d,'correlation','Smallest',1);
     end
     centricSet = zeros(k,dimension - 1);
     newCentricSet = zeros(k,dimension - 1);
@@ -75,7 +75,7 @@ function [ result, finalCentric, iterationTime ] = kMeans( dataSet,k,comd,vararg
     result = cell(k,1);
     for m=1:1:k
 %         classCell{m}(indexVec(m):count,:)=[];
-        result{m} = dataSet(indexTag==m,2:dimension);
+        result{m} = dataSet(indexTag==m,1:dimension);
     end
     
     finalCentric = newCentricSet; 
