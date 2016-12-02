@@ -11,7 +11,7 @@ function [ result, finalCentric, iterationTime ] = kMeans( dataSet,k,comd,vararg
             fun = @(c,d,p)pdist2(c,d,'cosin','Smallest',1);
         case 'M'
             order = varargin{1};
-            fun = @(c,d,p)pdist2(c,d,'minkowski',p,'Smallest',1)
+            fun = @(c,d,p)pdist2(c,d,'minkowski',p,'Smallest',1);
         case 'C'
             fun = @(c,d,p)pdist2(c,d,'correlation','Smallest',1);
     end
