@@ -1,34 +1,37 @@
 classdef NPMotionTest
    
     properties
-        iterationTime;
         timeDelay;
         dimension;
         k;
-        rawDataArray;
-        centricSet;
-        name;
+        xy;
+        velocity;
+        analysisMethod;
+        header;
+        realIndex;
+        indexTag;
+        centric;
     end
     
     properties (Access = private)
-        resultDataCell;
+        resultData;
     end
-  
-    properties (Dependent)
-        result;  
-    end
-    
+     
     methods
-        function obj = NPMotionTest(name,iT,tD,d,k,raw,result,cs)
-            obj.name = name;
-            obj.iterationTime = iT;
-            obj.timeDelay = tD;
-            obj.dimension = d;
+        function obj = NPMotionTest(analysisMethod,xy,resultData,indexTag,header,centric,velocity,tau,D,k)
+            obj.timeDelay = tau;
+            obj.dimension = D;
             obj.k = k;
-            obj.rawDataArray = raw;
-            obj.resultDataCell = result;
-            obj.centricSet = cs;
-        end        
+            obj.xy = xy;
+            obj.velocity = velocity;
+            obj.analysisMethod = analysisMethod;
+            obj.resultData = resultData;
+            obj.indexTag = indexTag;
+            obj.header = header;
+            obj.realIndex = header:1:(size(resultData,1) + header - 1);
+            obj.centric = centric;
+        end      
+        
         function [] = plot(obj)
             posMatrix = zeros(1,obj.k*3);
             for m=1:1:obj.k
@@ -38,29 +41,43 @@ classdef NPMotionTest
             obj.plotTest();
             for m=1:1:obj.k
                 subplot(obj.k,4,4*m);
-                plot(obj.centricSet(m,:));
+                plot(obj.centric(m,:));
                 title(strcat('Avarage curve for grounp',num2str(m)));
             end            
         end
-        function [] = plotTest(obj,varargin)
-            plot(obj.rawDataArray(:,1));
+        
+        function [] = plotTest(obj)
+            plot(obj.velocity,'DisplayName','velocity of NP');
             hold on;
-            if nargin == 2
-                markerSize = varargin{1};
-            else
-                markerSize = 30;
-            end
+            markerSize = 30;
             for m = 1:1:obj.k
-                scatter(obj.result{m}(:,1),obj.result{m}(:,2),markerSize,'filled','DisplayName',strcat('Group ',num2str(m)));
+                [~,I] = obj.getResult(m);
+                scatter(I,obj.velocity(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(m)));
             end
-            title(strcat('Test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
+            title(strcat(obj.analysisMethod,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
         end   
-        function res = getGroup(obj,k)
-            res = obj.resultDataCell{k};
-        end        
-        function result = get.result(obj)
-            result = obj.resultDataCell;
+           
+        function [result,Index] = getResult(obj,varargin)
+            if isempty(varargin)
+                Index = obj.realIndex;
+                result = obj.resultData;
+            else if and(varargin{1} > 0,varargin{1} <= obj.k)
+                Index = obj.realIndex(obj.indexTag == varargin{1});
+                result = obj.resultData(obj.indexTag == varargin{1},:);
+                end
+            end          
+        end
+
+        function [indexResult] = getIndexResult(obj,varargin)
+            indexResult = zeros(size(obj.resultData) + [0,1]);
+            [r,I] = obj.getResult(varargin);
+            indexResult(:,1) = I;
+            indexResult(:,2:end) = r;
+        end
+
+        function [data] = getResultAt(obj,indices)
+            data = obj.resultData(indices,:);
         end
     end
     
