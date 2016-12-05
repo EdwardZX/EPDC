@@ -15,11 +15,13 @@ Empirical Particle Dynamic Classification
 + 'uni' means univariable method
 + 'msd' means MSD test for nano-particle, the rawData should also be xy
 + 'multi' means multivariable method, the empirical correlation of each variable is used for classification
+
 #### next param is a M-by-4 matrix for batch process, each rows represents a processing for specific param
 + param(:,1) is timeDelay, useless in 'msd' method
 + param(:,2) is dimension
 + param(:,3) is k for k-Means
 + param(:,4) is order for Minkowski distance
+
 #### the fifth param is also a char comd to tell EPDC which distance should be used
 + 'E' for Euclidean distance
 + 'V' for dot product
