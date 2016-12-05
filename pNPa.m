@@ -38,7 +38,6 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,varargin)
     isOpt = ~isempty(varargin);
 
     velocity = zeros(size(xy,1),1);
-    velocity(1) = 0;
     velocity(2:end) = bsxfun(@(x,y)(sum((x-y).*(x-y),2)).^0.5,xy(2:end,:),xy(1:(end-1),:));
     
     for m=1:1:count
