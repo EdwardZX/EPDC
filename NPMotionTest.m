@@ -43,6 +43,7 @@ classdef NPMotionTest
                 subplot(obj.k,4,4*m);
                 plot(obj.centric(m,:));
                 title(strcat('Avarage curve for grounp',num2str(m)));
+                xlim([1,size(obj.centric,2)]);
             end            
         end
         
