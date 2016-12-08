@@ -80,6 +80,15 @@ classdef NPMotionTest
         function [data] = getResultAt(obj,indices)
             data = obj.resultData(indices,:);
         end
+        
+        function h = tagHist(obj,minRange,maxRange)
+            data = obj.indexTag(minRange:maxRange);
+            h = histogram(data(data == 1));
+            hold on;
+            for m = 2:1:obj.k
+                h = histogram(data(data == m),'DisplayName',strcat('Group: ',num2str(m)));
+            end
+        end
     end
     
     
