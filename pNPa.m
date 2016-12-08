@@ -22,7 +22,10 @@
 function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,varargin)
     [count,~] = size(param);
     result = cell(count,1);
-    
+    if any(any(isnan(xy))) || any(any(isnan(rawData))) || any(any(isnan(param)))
+        disp('ERROR: NaN value input!');
+        return;
+    end
     switch analysisMethod
         case 'uni'
             if size(rawData,2) > 1
@@ -48,11 +51,7 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,varargin)
           [I,C,~] = optKMeans(data,param(m,3),comd,param(m,4),1);
         end
         result{m} = NPMotionTest(analysisMethod,xy,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
-%         data = rcTimeDelaySet(rawData,param(m,1),param(m,2));
-%         [rs,centricSet,iT] = kMeans(data,param(m,3),comd,param(m,4));
-%         result{m} = NPMotionTest('EDM',iT,param(m,1),param(m,2),param(m,3),rawData,rs,centricSet);
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
-%         figure;
         result{m}.plot();
     end
     disp('All process has been done!');
