@@ -33,6 +33,7 @@ classdef NPMotionTest
         end      
         
         function [] = plot(obj)
+            figure;
             posMatrix = zeros(1,obj.k*3);
             for m=1:1:obj.k
                 posMatrix((m-1)*3+1:m*3)=[1,2,3] + 4*(m-1);
@@ -80,14 +81,26 @@ classdef NPMotionTest
         function [data] = getResultAt(obj,indices)
             data = obj.resultData(indices,:);
         end
-        
+        function relIndex = abs2rel(obj,absIndex)
+            relIndex = absIndex - obj.header + 1;
+        end
         function h = tagHist(obj,minRange,maxRange)
+            figure;
+            minRange = obj.abs2rel(minRange);
+            maxRange = obj.abs2rel(maxRange);
             data = obj.indexTag(minRange:maxRange);
-            h = histogram(data(data == 1));
+            dataLength = size(data,2);
+            c = lines(obj.k + 1);
+            %h = histogram(data(data == 1),'DisplayName','Group:1');
+            h = bar(1,sum(data==1) * 100/dataLength,'DisplayName','Group:1','BarWidth',1,'FaceColor',c(2,:));
             hold on;
             for m = 2:1:obj.k
-                h = histogram(data(data == m),'DisplayName',strcat('Group: ',num2str(m)));
+                %h = histogram(data(data == m),'DisplayName',strcat('Group:',num2str(m)));
+                bar(m,sum(data==m) * 100/dataLength,'DisplayName',strcat('Group:',num2str(m)),'BarWidth',1,'FaceColor',c(m + 1,:));
             end
+            xlabel('Group Index of K-means');
+            ylabel('percentage in selected range ( % )');
+            hold off;
         end
     end
     
