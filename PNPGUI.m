@@ -16,9 +16,13 @@ classdef PNPGUI < handle
         hEditBox;
         hJampToButton;
         hKeepRangeButton;
+        hIsFilterCB;
+        hGroupListBox;
   
         viewSize;
         isKeepRange;
+        
+        isShowGroup;
     end
 
     methods (Access = public)
@@ -26,6 +30,7 @@ classdef PNPGUI < handle
             obj.pT = pT;
             obj.currentPointIndex = pT.header;
             obj.isKeepRange = 0;
+            obj.isShowGroup = zeros(obj.pT.k,1);
         end
 
         function show(obj)
@@ -46,6 +51,10 @@ classdef PNPGUI < handle
             set(obj.hJampToButton,'callback',@obj.onEnter);
             obj.hKeepRangeButton = uicontrol('parent',obj.hFigure,'string','Keep Range','Style','radiobutton','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*6,80,49]);
             set(obj.hKeepRangeButton,'callback',@obj.onKeepRange);
+            obj.hIsFilterCB = uicontrol('parent',obj.hFigure,'string','Filter Group','Style','checkbox','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*7,80,49],'Value',0);
+            set(obj.hIsFilterCB,'callback',@obj.onFilterGroup);            
+            obj.hGroupListBox = uicontrol('parent',obj.hFigure,'string',num2str((1:1:obj.pT.k)'),'Style','listbox','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*10,80,130],'Enable','off');
+            set(obj.hGroupListBox,'callback',@obj.onGroupClick);            
         end
 
     end
@@ -57,7 +66,7 @@ classdef PNPGUI < handle
                 tmpY = ylim();
             end
             h = plot(obj.pT.xy(:,1),obj.pT.xy(:,2),'DisplayName','Particle Motion Trace');
-            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:));
+            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:),obj.isShowGroup);
             scatter(obj.pT.xy(obj.currentPointIndex,1),...
                     obj.pT.xy(obj.currentPointIndex,2),...
                     30,'k','filled','DisplayName','Current Point');  
@@ -80,7 +89,8 @@ classdef PNPGUI < handle
             ylim([min(localXY(:,2)),max(localXY(:,2))]);
 
             PNPGUI.scatterGroupTo(obj.pT.indexTag(relativeRange),obj.pT.k,...
-                                  obj.pT.xy(realRange(realRange >= obj.pT.header),:));
+                                  obj.pT.xy(realRange(realRange >= obj.pT.header),:),...
+                                  obj.isShowGroup);
 
             scatter(obj.pT.xy(obj.currentPointIndex,1),...
                     obj.pT.xy(obj.currentPointIndex,2),...
@@ -98,7 +108,7 @@ classdef PNPGUI < handle
             end
             h = plot(obj.pT.velocity);
             Ptrace = [obj.pT.realIndex',obj.pT.velocity(obj.pT.realIndex)];
-            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,Ptrace);
+            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,Ptrace,obj.isShowGroup);
             scatter(obj.currentPointIndex,...
                     obj.pT.velocity(obj.currentPointIndex),...
                     30,'k','filled','DisplayName','CurrentPoint');
@@ -148,13 +158,31 @@ classdef PNPGUI < handle
         function onKeepRange(obj,varargin)
             obj.isKeepRange = get(obj.hKeepRangeButton,'Value');
         end
+        function onFilterGroup(obj,varargin)
+            if varargin{1}.Value
+                set(obj.hGroupListBox,'Enable','on');
+            else
+                set(obj.hGroupListBox,'Enable','off');
+                obj.isShowGroup = zeros(obj.pT.k,1);
+                obj.update();
+            end
+        end
+        
+        function onGroupClick(obj,varargin)
+            obj.isShowGroup = logical(obj.isShowGroup + 1);
+            obj.isShowGroup(varargin{1}.Value) = 0;
+            disp(obj.isShowGroup);
+            obj.update();
+        end
     end
 
     methods (Static)
-        function [] = scatterGroupTo(Tag,k,trace)
+        function [] = scatterGroupTo(Tag,k,trace,isShow)
             hold on;
             for m = 1:1:k
-                scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)));             
+                if(~isShow(m))
+                    scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)));  
+                end
             end
         end
     end
