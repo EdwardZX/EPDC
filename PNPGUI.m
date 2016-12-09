@@ -171,7 +171,6 @@ classdef PNPGUI < handle
         function onGroupClick(obj,varargin)
             obj.isShowGroup = logical(obj.isShowGroup + 1);
             obj.isShowGroup(varargin{1}.Value) = 0;
-            disp(obj.isShowGroup);
             obj.update();
         end
     end
