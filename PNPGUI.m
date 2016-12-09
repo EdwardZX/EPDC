@@ -23,6 +23,8 @@ classdef PNPGUI < handle
         isKeepRange;
         
         isShowGroup;
+        
+        colors;
     end
 
     methods (Access = public)
@@ -31,6 +33,7 @@ classdef PNPGUI < handle
             obj.currentPointIndex = pT.header;
             obj.isKeepRange = 0;
             obj.isShowGroup = zeros(obj.pT.k,1);
+            obj.colors = lines(7);
         end
 
         function show(obj)
@@ -65,8 +68,8 @@ classdef PNPGUI < handle
                 tmpX = xlim();
                 tmpY = ylim();
             end
-            h = plot(obj.pT.xy(:,1),obj.pT.xy(:,2),'DisplayName','Particle Motion Trace');
-            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:),obj.isShowGroup);
+            h = plot(obj.pT.xy(:,1),obj.pT.xy(:,2),'DisplayName','Particle Motion Trace','Color',obj.colors(1,:));
+            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:),obj.isShowGroup,obj.colors(2:7,:));
             scatter(obj.pT.xy(obj.currentPointIndex,1),...
                     obj.pT.xy(obj.currentPointIndex,2),...
                     30,'k','filled','DisplayName','Current Point');  
@@ -84,13 +87,13 @@ classdef PNPGUI < handle
             relativeRange = relativeRange(relativeRange > 0);
 
             localXY = obj.pT.xy(realRange,:);
-            h = plot(localXY(:,1),localXY(:,2),'DisplayName','Local Trace');
+            h = plot(localXY(:,1),localXY(:,2),'DisplayName','Local Trace','Color',obj.colors(1,:));
             xlim([min(localXY(:,1)),max(localXY(:,1))]);
             ylim([min(localXY(:,2)),max(localXY(:,2))]);
 
             PNPGUI.scatterGroupTo(obj.pT.indexTag(relativeRange),obj.pT.k,...
                                   obj.pT.xy(realRange(realRange >= obj.pT.header),:),...
-                                  obj.isShowGroup);
+                                  obj.isShowGroup,obj.colors(2:7,:));
 
             scatter(obj.pT.xy(obj.currentPointIndex,1),...
                     obj.pT.xy(obj.currentPointIndex,2),...
@@ -106,9 +109,9 @@ classdef PNPGUI < handle
             if obj.isKeepRange
                 tmpX = xlim();
             end
-            h = plot(obj.pT.velocity);
+            h = plot(obj.pT.velocity,'DisplayName','Velocity','Color',obj.colors(1,:));
             Ptrace = [obj.pT.realIndex',obj.pT.velocity(obj.pT.realIndex)];
-            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,Ptrace,obj.isShowGroup);
+            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,Ptrace,obj.isShowGroup,obj.colors(2:7,:));
             scatter(obj.currentPointIndex,...
                     obj.pT.velocity(obj.currentPointIndex),...
                     30,'k','filled','DisplayName','CurrentPoint');
@@ -176,11 +179,16 @@ classdef PNPGUI < handle
     end
 
     methods (Static)
-        function [] = scatterGroupTo(Tag,k,trace,isShow)
+        function [] = scatterGroupTo(Tag,k,trace,isShow,colors)
+            L = size(colors,1);
             hold on;
             for m = 1:1:k
                 if(~isShow(m))
-                    scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)));  
+                    if mod(m,L)
+                        scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)),'MarkerFaceColor',colors(mod(m,L),:));  
+                    else
+                        scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)),'MarkerFaceColor',colors(L,:));  
+                    end
                 end
             end
         end
