@@ -85,6 +85,10 @@ classdef NPMotionTest
             relIndex = absIndex - obj.header + 1;
         end
         function h = tagHist(obj,minRange,maxRange)
+            if minRange < obj.header
+                disp('ERROR: minRange input is smaller than header index!');
+                disp(strcat('Header:',num2str(obj.header)));
+            end
             figure;
             minRange = obj.abs2rel(minRange);
             maxRange = obj.abs2rel(maxRange);
