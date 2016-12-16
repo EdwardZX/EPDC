@@ -54,6 +54,9 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,varargin)
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
         result{m}.plot();
     end
+    if count == 1
+        result = result{1};
+    end
     disp('All process has been done!');
 end
 
