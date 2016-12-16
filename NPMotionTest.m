@@ -84,26 +84,28 @@ classdef NPMotionTest
         function relIndex = abs2rel(obj,absIndex)
             relIndex = absIndex - obj.header + 1;
         end
-        function h = tagHist(obj,minRange,maxRange)
+        function [h,counts,dataLength] = tagHist(obj,minRange,maxRange)
             if minRange < obj.header
                 disp('ERROR: minRange input is smaller than header index!');
                 disp(strcat('Header:',num2str(obj.header)));
             end
             figure;
+            counts = zeros(obj.k,1);
             minRange = obj.abs2rel(minRange);
             maxRange = obj.abs2rel(maxRange);
             data = obj.indexTag(minRange:maxRange);
             dataLength = size(data,2);
             c = lines(obj.k + 1);
-            %h = histogram(data(data == 1),'DisplayName','Group:1');
-            h = bar(1,sum(data==1) * 100/dataLength,'DisplayName','Group:1','BarWidth',1,'FaceColor',c(2,:));
+            counts(1) = sum(data==1);
+            h = bar(1,counts(1) * 100/dataLength,'DisplayName','Group:1','BarWidth',1,'FaceColor',c(2,:));
             hold on;
             for m = 2:1:obj.k
-                %h = histogram(data(data == m),'DisplayName',strcat('Group:',num2str(m)));
-                bar(m,sum(data==m) * 100/dataLength,'DisplayName',strcat('Group:',num2str(m)),'BarWidth',1,'FaceColor',c(m + 1,:));
+                counts(m) = sum(data==m);
+                bar(m,counts(m) * 100/dataLength,'DisplayName',strcat('Group:',num2str(m)),'BarWidth',1,'FaceColor',c(m + 1,:));
             end
             xlabel('Group Index of K-means');
             ylabel('percentage in selected range ( % )');
+            title(['Histogram of the count of different Group from time index ' num2str(minRange) ' to ' num2str(maxRange)]);
             hold off;
         end
     end
