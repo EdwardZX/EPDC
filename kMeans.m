@@ -20,7 +20,7 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
 
     iterationTime = 1;
     
-    centricSet = dataSet(randsample(1:count,k),:);
+    centricSet = sortMatrix(dataSet(randsample(1:count,k),:));
     indexTag = zeros(count,1);
 
     
@@ -35,7 +35,7 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
             break;
         else
             iterationTime = iterationTime + 1;
-            centricSet = newCentricSet;   
+            centricSet = sortMatrix(newCentricSet);   
         end      
     end
     
@@ -45,6 +45,11 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
     disp(strcat('Iteration Time: ',num2str(iterationTime)));
     disp(strcat('sum of distance: ',num2str(Distance)));
 
+end
+
+function [M] = sortMatrix(M_I)
+    [~,I] = sort(mean(M_I,2));
+    M = M_I(I,:);
 end
 
 
