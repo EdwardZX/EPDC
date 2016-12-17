@@ -32,30 +32,46 @@ classdef NPMotionTest
             obj.centric = centric;
         end      
         
-        function [] = plot(obj)
+        function [] = plot(obj,varargin)
             figure;
+            if nargin >= 2
+                bgData = varargin{1};
+            else
+                bgData = obj.velocity;
+            end
             posMatrix = zeros(1,obj.k*3);
             for m=1:1:obj.k
                 posMatrix((m-1)*3+1:m*3)=[1,2,3] + 4*(m-1);
             end
             subplot(obj.k,4,posMatrix);
-            obj.plotTest();
+            if nargin == 3
+                obj.plotTest(bgData,varargin{2});
+            else
+                obj.plotTest(bgData);
+            end
             for m=1:1:obj.k
                 subplot(obj.k,4,4*m);
-                plot(obj.centric(m,:));
+                plot(obj.centric(m,end:-1:1));
                 title(strcat('Avarage curve for grounp',num2str(m)));
                 xlim([1,size(obj.centric,2)]);
             end            
         end
         
-        function [] = plotTest(obj)
-            plot(obj.velocity,'DisplayName','velocity of NP');
+        
+        function [] = plotTest(obj,bgData,varargin)
+            plot(bgData,'DisplayName','velocity of NP');
             hold on;
             markerSize = 30;
-            for m = 1:1:obj.k
-                [~,I] = obj.getResult(m);
-                scatter(I,obj.velocity(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(m)));
+            if nargin == 3
+                [~,I] = obj.getResult(varargin{1});
+                scatter(I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(varargin{1})));
+            else
+                for m = 1:1:obj.k
+                    [~,I] = obj.getResult(m);
+                    scatter(I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(m)));
+                end
             end
+            
             title(strcat(obj.analysisMethod,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
         end   
