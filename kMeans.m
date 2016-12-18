@@ -42,8 +42,8 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
     Distance = sum(D);
     finalCentric = newCentricSet;
     
-    disp(strcat('Iteration Time: ',num2str(iterationTime)));
-    disp(strcat('sum of distance: ',num2str(Distance)));
+    %disp(strcat('Iteration Time: ',num2str(iterationTime)));
+    %disp(strcat('sum of distance: ',num2str(Distance)));
 
 end
 

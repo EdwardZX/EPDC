@@ -31,13 +31,26 @@ classdef NPMotionTest
             obj.realIndex = header:1:(size(resultData,1) + header - 1);
             obj.centric = centric;
         end      
-        
+        function h = plotC(obj)
+            figure;
+            c = lines(obj.k + 1);
+            plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:));
+            hold on;
+            for m = 2:1:obj.k
+                plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:));
+            end
+            hold off;
+        end
         function [] = plot(obj,varargin)
             figure;
             if nargin >= 2
                 bgData = varargin{1};
             else
                 bgData = obj.velocity;
+            end
+            if obj.dimension <= 1
+                obj.plotTest(bgData);
+                return;
             end
             posMatrix = zeros(1,obj.k*3);
             for m=1:1:obj.k
@@ -51,7 +64,11 @@ classdef NPMotionTest
             end
             for m=1:1:obj.k
                 subplot(obj.k,4,4*m);
-                plot(obj.centric(m,end:-1:1));
+                if obj.analysisMethod == 'uni'
+                    plot(obj.centric(m,end:-1:1));
+                else
+                    plot(obj.centric(m,:));
+                end
                 title(strcat('Avarage curve for grounp',num2str(m)));
                 xlim([1,size(obj.centric,2)]);
             end            
