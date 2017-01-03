@@ -52,7 +52,11 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,varargin)
         end
         result{m} = NPMotionTest(analysisMethod,xy,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
-        result{m}.plot();
+        if strcmp(analysisMethod,'uni')
+            result{m}.plot(rawData);
+        else
+            result{m}.plot();
+        end
     end
     if count == 1
         result = result{1};
@@ -61,6 +65,8 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,varargin)
 end
 
 function [indexTag,C,D] = optKMeans(raw,k,comd,p,optTime)
+    disp('Optimization begin...');
+    disp(strcat('Total trial: ',num2str(optTime)));
     [indexTag,C,D] = kMeans(raw,k,comd,p);
     if optTime > 1
         for m = 2:1:optTime
