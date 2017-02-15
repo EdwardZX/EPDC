@@ -30,17 +30,19 @@ classdef NPMotionTest
             obj.header = header;
             obj.realIndex = header:1:(size(resultData,1) + header - 1);
             obj.centric = centric;
-        end      
+        end     
+        % plotC: plot centric in one axes
         function h = plotC(obj)
             figure;
             c = lines(obj.k + 1);
-            plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:));
+            plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
             hold on;
             for m = 2:1:obj.k
-                plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:));
+                plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
             end
             hold off;
         end
+        % plot(bgData = velocity,grounpIndex = all);
         function [] = plot(obj,varargin)
             figure;
             if nargin >= 2
@@ -56,36 +58,40 @@ classdef NPMotionTest
             for m=1:1:obj.k
                 posMatrix((m-1)*3+1:m*3)=[1,2,3] + 4*(m-1);
             end
-            subplot(obj.k,4,posMatrix);
+            hA = subplot(obj.k,4,posMatrix);
             if nargin == 3
-                obj.plotTest(bgData,varargin{2});
+                obj.plotTest(hA,bgData,varargin{2});
             else
-                obj.plotTest(bgData);
+                obj.plotTest(hA,bgData);
             end
             for m=1:1:obj.k
-                subplot(obj.k,4,4*m);
-                if obj.analysisMethod == 'uni'
-                    plot(obj.centric(m,end:-1:1));
-                else
-                    plot(obj.centric(m,:));
-                end
-                title(strcat('Avarage curve for grounp',num2str(m)));
-                xlim([1,size(obj.centric,2)]);
+                hA = subplot(obj.k,4,4*m);
+                obj.plotSingleCentric(hA,m);
             end            
         end
         
+        function h = plotSingleCentric(obj,hAxes,m)
+            if obj.analysisMethod == 'uni'
+                h = plot(hAxes,obj.centric(m,end:-1:1));
+            else
+                h = plot(hAxes,obj.centric(m,:));
+            end
+            title(strcat('Avarage curve for grounp',num2str(m)));
+            xlim([1,size(obj.centric,2)]);
+        end
         
-        function [] = plotTest(obj,bgData,varargin)
-            plot(bgData,'DisplayName','velocity of NP');
+        % plotTest(hAxes,bgData,grounpIndex = all)
+        function [] = plotTest(obj,hAxes,bgData,varargin)
+            plot(hAxes,bgData,'DisplayName','velocity of NP');
             hold on;
             markerSize = 30;
-            if nargin == 3
+            if nargin == 4
                 [~,I] = obj.getResult(varargin{1});
-                scatter(I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(varargin{1})));
+                scatter(hAxes,I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(varargin{1})));
             else
                 for m = 1:1:obj.k
                     [~,I] = obj.getResult(m);
-                    scatter(I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(m)));
+                    scatter(hAxes,I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(m)));
                 end
             end
             
@@ -117,7 +123,14 @@ classdef NPMotionTest
         function relIndex = abs2rel(obj,absIndex)
             relIndex = absIndex - obj.header + 1;
         end
-        function [h,counts,dataLength] = tagHist(obj,minRange,maxRange)
+        function [h,counts,dataLength] = tagHist(obj,varargin)
+            if nargin == 3
+                minRange = varargin{1};
+                maxRange = varargin{2};
+            else
+                minRange = obj.header;
+                maxRange = length(obj.velocity);
+            end
             if minRange < obj.header
                 disp('ERROR: minRange input is smaller than header index!');
                 disp(strcat('Header:',num2str(obj.header)));
@@ -141,8 +154,6 @@ classdef NPMotionTest
             title(['Histogram of the count of different Group from time index ' num2str(minRange) ' to ' num2str(maxRange)]);
             hold off;
         end
-    end
-    
+    end    
     
 end
-
