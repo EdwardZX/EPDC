@@ -155,6 +155,27 @@ classdef MultiPro < handle
             obj.kMeansCentrality = [];
             obj.pResult = cell(obj.particleNum,1);   
         end
+        
+        function hFigure = show(obj)
+            if isempty(obj.kMeansCentrality)
+                return;
+            end
+            hFigure = figure;
+            hHBox = uiextras.HBox('Parent',hFigure);
+            hVBoxL = uiextras.VBox('Parent',hHBox);
+            hVBoxR = uiextras.VBox('Parent',hHBox);
+            hHBox.Widths = [-3,-1];
+            for m = 1:1:obj.particleNum
+                tmpH = axes('Parent',hVBoxL);
+                obj.pResult{m}.plotTest(tmpH,obj.pResult{m}.velocity);
+                title(strcat('Parent:',32,obj.particleIds{m}));
+            end
+            
+            for m = 1:1:size(obj.kMeansCentrality,1)
+                tmpH = axes('Parent',hVBoxR);
+                obj.pResult{1}.plotSingleCentric(tmpH,m);
+            end
+        end
     end
     
     methods (Access = private)
