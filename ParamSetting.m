@@ -45,6 +45,7 @@ handles.param.optRepeat = 0;
 handles.param.distanceScale = '';
 
 set(handles.EDT_Order,'Enable','off');
+set(handles.EDT_timeDelay,'Enable','off');
 % Choose default command line output for ParamSetting
 handles.output = hObject;
 
@@ -314,7 +315,9 @@ if get(hObject,'Value')
 	set(handles.RBT_MSD,'Value',0);
 	set(handles.RBT_Cor,'Value',0);
 	handles.param.isValid(1) = 1;
+    set(handles.EDT_timeDelay,'Enable','on');
 else
+    set(handles.EDT_timeDelay,'Enable','off');
 	handles.param.isValid(1) = 0;
 end
 guidata(hObject,handles);
@@ -331,8 +334,12 @@ if get(hObject,'Value')
 	set(handles.RBT_Uni,'Value',0);
 	set(handles.RBT_Cor,'Value',0);
 	handles.param.isValid(1) = 1;
+    handles.param.timeDelay = 0;
+	handles.param.isValid(2) = 1;
+    set(handles.EDT_timeDelay,'Enable','off','String','');
 else
 	handles.param.isValid(1) = 0;
+    set(handles.EDT_timeDelay,'Enable','on');
 end
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of RBT_MSD
@@ -348,8 +355,10 @@ if get(hObject,'Value')
 	set(handles.RBT_Uni,'Value',0);
 	set(handles.RBT_MSD,'Value',0);
 	handles.param.isValid(1) = 1;
+    set(handles.EDT_timeDelay,'Enable','on');
 else
 	handles.param.isValid(1) = 0;
+    set(handles.EDT_timeDelay,'Enable','off');
 end
 guidata(hObject,handles);
 % Hint: get(hObject,'Value') returns toggle state of RBT_Cor
