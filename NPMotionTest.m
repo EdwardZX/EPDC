@@ -135,6 +135,8 @@ classdef NPMotionTest
                 disp('ERROR: minRange input is smaller than header index!');
                 disp(strcat('Header:',num2str(obj.header)));
             end
+            tmpMin = minRange;
+            tmpMax = maxRange;
             figure;
             counts = zeros(obj.k,1);
             minRange = obj.abs2rel(minRange);
@@ -151,7 +153,7 @@ classdef NPMotionTest
             end
             xlabel('Group Index of K-means');
             ylabel('percentage in selected range ( % )');
-            title(['Histogram of the count of different Group from time index ' num2str(minRange) ' to ' num2str(maxRange)]);
+            title(['Histogram of the count of different Group from time index ' num2str(tmpMin) ' to ' num2str(tmpMax)]);
             hold off;
         end
     end    
