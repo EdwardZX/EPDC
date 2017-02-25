@@ -71,7 +71,7 @@ classdef NPMotionTest
         end
         
         function h = plotSingleCentric(obj,hAxes,m)
-            if obj.analysisMethod == 'uni'
+            if strcmp(obj.analysisMethod,'uni')
                 h = plot(hAxes,obj.centric(m,end:-1:1));
             else
                 h = plot(hAxes,obj.centric(m,:));
@@ -95,7 +95,7 @@ classdef NPMotionTest
                 end
             end
             
-            title(strcat(obj.analysisMethod,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
+            title(strcat(obj.analysisMethod,32,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
         end   
            
