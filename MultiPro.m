@@ -16,11 +16,17 @@ classdef MultiPro < handle
         secondaryHeader;
         secondaryIndex;
         kMeansCentrality;
+        param;
     end
     
     properties (Dependent)
         particleNum;
         totalLength;
+        centrality;
+        timeDelay;
+        dimension;
+        k;
+        distanceScale;
     end
     
     methods
@@ -34,6 +40,7 @@ classdef MultiPro < handle
             obj.secondaryData = [];
             obj.secondaryLength = [];
             obj.secondaryHeader = [];
+            obj.param = 0;
         end
         
         function addParticle(obj,xy,data,varargin)
@@ -69,6 +76,34 @@ classdef MultiPro < handle
             tL = sum(obj.dataLength);
         end
         
+        function c = get.centrality(obj)
+            c = obj.kMeansCentrality;
+        end
+        
+        function tau = get.timeDelay(obj)
+            if obj.param
+                tau = obj.param.timeDelay;
+            end
+        end
+        
+        function k = get.K(obj)
+            if obj.param
+                k = obj.param.k;
+            end
+        end
+        
+        function d = get.dimension(obj)
+            if obj.param
+                d = obj.param.dimension;
+            end
+        end
+        
+        function ds = get.distanceScale(obj)
+            if obj.param
+                ds = obj.param.distanceScale;
+            end
+        end
+        
         function data = getData(obj,num)
             [a,b] = obj.pNum2pRegion(num,1);
             data = obj.rawData(a:b,:);
@@ -90,14 +125,16 @@ classdef MultiPro < handle
         end
         
         function process(obj)
-            [~,param,index] = ParamSetting(obj.particleNum);
+            [~,obj.param,index] = ParamSetting(obj.particleNum);
             if index
                 
+                fprintf(1,'Process in %s method with D = %d for %s distance\n',...
+                        obj.param.method,obj.param.dim,obj.param.distanceScale);
                 obj.velocityCell = cell(obj.particleNum,1);
                 obj.secondaryLength = zeros(obj.particleNum,1);
                 obj.secondaryHeader = zeros(obj.particleNum,1);
                 
-                switch param.method
+                switch obj.param.method
                     case 'uni'
                         aFun = @(raw,tau,D)rcTimeDelaySet(raw,tau,D);
                     case 'msd'
@@ -114,7 +151,7 @@ classdef MultiPro < handle
                     tmpV(2:end) = bsxfun(@(x,y)(sum((x-y).*(x-y),2)).^0.5,tmpXY(2:end,:),tmpXY(1:(end-1),:));
                     obj.velocityCell{m} = tmpV;
                     % calculate local secondary data
-                    [secData,locHeader] = aFun(tmpRaw,param.timeDelay,param.dim);
+                    [secData,locHeader] = aFun(tmpRaw,obj.param.timeDelay,obj.param.dim);
                     obj.secondaryData = [obj.secondaryData;secData];
                     obj.secondaryLength(m) = size(secData,1);
                     obj.secondaryHeader(m) = locHeader;
@@ -123,23 +160,23 @@ classdef MultiPro < handle
                 % process k-means
                 [obj.secondaryIndex,...
                  obj.kMeansCentrality,~] = MultiPro.optKMeans(obj.secondaryData,...
-                                                              param.k,...
-                                                              param.distanceScale,...
-                                                              param.order,...
-                                                              param.optRepeat);
+                                                              obj.param.k,...
+                                                              obj.param.distanceScale,...
+                                                              obj.param.order,...
+                                                              obj.param.optRepeat);
                 
                 % create local Result
                 obj.pResult = cell(obj.particleNum,1);     
                 for m = 1:1:obj.particleNum
-                    obj.pResult{m} = NPMotionTest(param.method,obj.getTrace(m),...
+                    obj.pResult{m} = NPMotionTest(obj.param.method,obj.getTrace(m),...
                                                   obj.getSecData(m),...
                                                   obj.getSecIndex(m),...
                                                   obj.secondaryHeader(m),...
                                                   obj.kMeansCentrality,...
                                                   obj.velocityCell{m},...
-                                                  param.timeDelay,...
-                                                  param.dim,...
-                                                  param.k);
+                                                  obj.param.timeDelay,...
+                                                  obj.param.dim,...
+                                                  obj.param.k);
                 end
                 
                 disp('Process Done!');
@@ -176,6 +213,8 @@ classdef MultiPro < handle
                 obj.pResult{1}.plotSingleCentric(tmpH,m);
             end
         end
+        
+        function 
     end
     
     methods (Access = private)
