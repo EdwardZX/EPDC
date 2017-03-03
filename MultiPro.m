@@ -64,7 +64,8 @@ classdef MultiPro < handle
                 obj.rawXY = [obj.rawXY;xy];
                 obj.dataLength(end+1) = newLength;             
             else
-                fprintf(1,'ERROR: dismatch of in data dim: %d with MultiPro instance data dim: %d',newDim,obj.dataDim);
+                fprintf(1,'ERROR: dismatch of in data dim: %d with MultiPro instance data dim: %d\n',newDim,obj.dataDim);
+                fprintf(1,'Action Cancelled\n');
             end  
         end
         
@@ -86,7 +87,7 @@ classdef MultiPro < handle
             end
         end
         
-        function k = get.K(obj)
+        function k = get.k(obj)
             if obj.param
                 k = obj.param.k;
             end
@@ -213,8 +214,6 @@ classdef MultiPro < handle
                 obj.pResult{1}.plotSingleCentric(tmpH,m);
             end
         end
-        
-        function 
     end
     
     methods (Access = private)
