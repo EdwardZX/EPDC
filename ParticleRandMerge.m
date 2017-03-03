@@ -87,6 +87,17 @@ classdef ParticleRandMerge < handle
             legend('show');
         	hold off;
         end
+        
+        function plotMean(obj,dim)
+            figure;
+            axes;
+            hold on;
+            for m = 1:1:obj.mergeNum
+                tmp = obj.getResultAt(m);
+                plot(mean(vecs2MSD(tmp(:,1:2),dim)),'DisplayName',strcat('Mean MSD of element:',32,num2str(m)));              
+            end
+            hold off;
+        end
                 
         function [index,result] = getResult(obj)
             result = obj.mergeResult;
@@ -165,7 +176,17 @@ classdef ParticleRandMerge < handle
             end
         end
     	
-	end
+    end
+    
+    methods (Static)
+        function [res,mergePoint] = mergeTwo(a,b)
+            [mergePoint,D] = size(a);
+            L = mergePoint + size(b,1) - 1;
+            res = zeros(L,D);
+            res(1:1:mergePoint,:) = a;
+            res((mergePoint+1):1:L,:) = b(2:end,:) + a(end,:);
+        end
+    end
     
 end
 
