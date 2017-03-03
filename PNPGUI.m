@@ -101,8 +101,13 @@ classdef PNPGUI < handle
             hold off;
         end
 
-        function h = plotData(obj)
-            h = plot(obj.pT.getResultAt(obj.currentPointIndex),'DisplayName',obj.pT.analysisMethod);
+        function h = plotData(obj)         
+            h = plot(obj.pT.getResultAt(obj.currentPointIndex - obj.pT.header + 1),'-','DisplayName',obj.pT.analysisMethod,'LineWidth',3);
+            hold on;
+            for m = 1:1:size(obj.pT.centric,1)
+                plot(obj.pT.centric(m,:),'--','DisplayName',strcat('Group:',32,num2str(m)));
+            end
+            hold off;
         end
 
         function h = plotVelocity(obj)
