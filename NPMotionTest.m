@@ -51,7 +51,7 @@ classdef NPMotionTest
                 bgData = obj.velocity;
             end
             if obj.dimension <= 1
-                obj.plotTest(bgData);
+                obj.plotTest(gca,bgData);
                 return;
             end
             posMatrix = zeros(1,obj.k*3);
@@ -84,7 +84,7 @@ classdef NPMotionTest
         function [] = plotTest(obj,hAxes,bgData,varargin)
             plot(hAxes,bgData,'DisplayName','velocity of NP');
             hold on;
-            markerSize = 30;
+            markerSize = 15;
             if nargin == 4
                 [~,I] = obj.getResult(varargin{1});
                 scatter(hAxes,I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(varargin{1})));
@@ -97,8 +97,7 @@ classdef NPMotionTest
             
             title(strcat(obj.analysisMethod,32,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
-        end   
-           
+        end           
         function [result,Index] = getResult(obj,varargin)
             if isempty(varargin)
                 Index = obj.realIndex;
@@ -109,14 +108,12 @@ classdef NPMotionTest
                 end
             end          
         end
-
         function [indexResult] = getIndexResult(obj,varargin)
             indexResult = zeros(size(obj.resultData) + [0,1]);
             [r,I] = obj.getResult(varargin);
             indexResult(:,1) = I;
             indexResult(:,2:end) = r;
         end
-
         function [data] = getResultAt(obj,indices)
             data = obj.resultData(indices,:);
         end
@@ -155,6 +152,25 @@ classdef NPMotionTest
             ylabel('percentage in selected range ( % )');
             title(['Histogram of the count of different Group from time index ' num2str(tmpMin) ' to ' num2str(tmpMax)]);
             hold off;
+        end
+        function  plotEmpTrace(obj,groupIndex,varargin)
+            if isempty(varargin)
+                figure;
+                hA = axes;
+                hold on;
+            else
+                hA = varargin{1};
+            end
+            c = lines(obj.k + 1);
+            tmp = 1:1:size(obj.xy,1);
+            targetIndex = tmp(logical([zeros(1,obj.header-1),(obj.indexTag==groupIndex)]));
+            for m = 1:1:length(targetIndex)
+                ender = targetIndex(m);
+                starter = ender - obj.header + 1;
+                tmpXY = obj.xy(starter:ender,:);
+                tmpXY = tmpXY - tmpXY(1,:);
+                plot(hA,tmpXY(:,1),tmpXY(:,2),'Color',c(groupIndex + 1,:));
+            end
         end
     end    
     
