@@ -128,6 +128,16 @@ classdef ParticleRandMerge < handle
             motionTest = NPMotionTest(analysisMethod,xy,resultData,indexTag,header,...
                                       centric,velocity,tau,D,k);
         end
+        
+        function I = getResultIndex(obj)
+            I = zeros(sum(obj.trackLength),1);
+            counter = 1;
+            for m = 1:1:obj.mergeNum
+                L = obj.trackLength(m);
+                I(counter:1:(counter + L - 1)) = ones(L,1) * obj.mergeTypeIndex(m);
+                counter = counter + L;
+            end
+        end
     end
 
     methods (Access = private)
