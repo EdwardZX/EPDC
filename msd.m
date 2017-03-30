@@ -6,6 +6,9 @@ function [ result ] = msd( vec,lag,varargin )
         end
     end
     [nr,~] = size(vec);
+    if nr <= lag
+        warning('vec length should higher than lag!');
+    end
     result = zeros(lag,1);
     gIndexM = @(calLength,tau)bsxfun(@plus,(1:1:calLength)',[0,tau]);
     for m = 1:1:lag
