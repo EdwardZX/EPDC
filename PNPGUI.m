@@ -16,6 +16,7 @@ classdef PNPGUI < handle
         hEditBox;
         hJampToButton;
         hKeepRangeButton;
+        h3DViewButton;
         hIsFilterCB;
         hGroupListBox;
   
@@ -25,6 +26,7 @@ classdef PNPGUI < handle
         isShowGroup;
         
         colors;
+        is3DView;
     end
 
     methods (Access = public)
@@ -34,6 +36,7 @@ classdef PNPGUI < handle
             obj.isKeepRange = 0;
             obj.isShowGroup = zeros(obj.pT.k,1);
             obj.colors = lines(7);
+            obj.is3DView = false;
         end
 
         function show(obj)
@@ -52,12 +55,14 @@ classdef PNPGUI < handle
             set(obj.hJampToButton,'callback',@obj.onEnter);
             obj.hJampToButton = uicontrol('parent',obj.hFigure,'string','JumpTo','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*5,80,49]);
             set(obj.hJampToButton,'callback',@obj.onEnter);
-            obj.hKeepRangeButton = uicontrol('parent',obj.hFigure,'string','Keep Range','Style','radiobutton','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*6,80,49]);
+            obj.hKeepRangeButton = uicontrol('parent',obj.hFigure,'string','Keep Range','Style','radiobutton','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*6,80,25]);
             set(obj.hKeepRangeButton,'callback',@obj.onKeepRange);
-            obj.hIsFilterCB = uicontrol('parent',obj.hFigure,'string','Filter Group','Style','checkbox','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*7,80,49],'Value',0);
+            obj.hIsFilterCB = uicontrol('parent',obj.hFigure,'string','Filter Group','Style','checkbox','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*6.5,80,25],'Value',0);
             set(obj.hIsFilterCB,'callback',@obj.onFilterGroup);            
-            obj.hGroupListBox = uicontrol('parent',obj.hFigure,'string',num2str((1:1:obj.pT.k)'),'Style','listbox','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*10,80,130],'Enable','off');
-            set(obj.hGroupListBox,'callback',@obj.onGroupClick);            
+            obj.hGroupListBox = uicontrol('parent',obj.hFigure,'string',num2str((1:1:obj.pT.k)'),'Style','listbox','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*9.5,80,130],'Enable','off');
+            set(obj.hGroupListBox,'callback',@obj.onGroupClick);        
+            obj.h3DViewButton = uicontrol('parent',obj.hFigure,'string','Go 3D View','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*11,80,49]);
+            set(obj.h3DViewButton,'callback',@obj.on3DViewClick);
         end
 
     end
@@ -68,22 +73,49 @@ classdef PNPGUI < handle
                 tmpX = xlim();
                 tmpY = ylim();
             end
-            h = plot(obj.pT.xy(:,1),obj.pT.xy(:,2),'DisplayName','Particle Motion Trace','Color',obj.colors(1,:));
-            PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:),obj.isShowGroup,obj.colors(2:7,:));
-            scatter(obj.pT.xy(obj.currentPointIndex,1),...
-                    obj.pT.xy(obj.currentPointIndex,2),...
-                    30,'k','filled','DisplayName','Current Point');  
-            hold off;   
+            if obj.is3DView
+                tmpZ = zlim();
+                [az,el] = view();
+                h = plot3(obj.pT.xy(:,1),obj.pT.xy(:,2),1:1:size(obj.pT.xy,1),'DisplayName','Particle Motion Trace','Color',obj.colors(1,:));
+                PNPGUI.scatterGroupTo3(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:),obj.isShowGroup,obj.colors(2:7,:),obj.pT.header - 1);
+                scatter3(obj.pT.xy(obj.currentPointIndex,1),...
+                         obj.pT.xy(obj.currentPointIndex,2),...
+                         obj.currentPointIndex,...
+                         30,'k','filled','DisplayName','Current Point');  
+                box on;
+                grid on;
+                hold off; 
+            else
+                h = plot(obj.pT.xy(:,1),obj.pT.xy(:,2),'DisplayName','Particle Motion Trace','Color',obj.colors(1,:));
+                PNPGUI.scatterGroupTo(obj.pT.indexTag,obj.pT.k,obj.pT.xy(obj.pT.realIndex,:),obj.isShowGroup,obj.colors(2:7,:));
+                scatter(obj.pT.xy(obj.currentPointIndex,1),...
+                        obj.pT.xy(obj.currentPointIndex,2),...
+                        30,'k','filled','DisplayName','Current Point');  
+                hold off; 
+            end             
             if obj.isKeepRange
                 xlim(tmpX);
                 ylim(tmpY);
+                if obj.is3DView
+                    zlim(tmpZ);
+                    view(az,el);
+                end
             end
         end
 
         function h = plotLocalTrace(obj)
-            realRange = obj.currentPointIndex - obj.pT.header + (1:1:obj.pT.header);
+            if obj.pT.header <= 10
+                header = 10;
+            else
+                header = obj.pT.header;
+            end
+            realRange = obj.currentPointIndex - header + (1:1:header);
+            
+            if any(realRange < 0)
+                realRange = realRange - min(realRange) + 1;
+            end
 
-            relativeRange = realRange - obj.pT.header + 1;
+            relativeRange = realRange - header + 1;
             relativeRange = relativeRange(relativeRange > 0);
 
             localXY = obj.pT.xy(realRange,:);
@@ -92,7 +124,7 @@ classdef PNPGUI < handle
             ylim([min(localXY(:,2)),max(localXY(:,2))]);
 
             PNPGUI.scatterGroupTo(obj.pT.indexTag(relativeRange),obj.pT.k,...
-                                  obj.pT.xy(realRange(realRange >= obj.pT.header),:),...
+                                  obj.pT.xy(realRange(realRange >= header),:),...
                                   obj.isShowGroup,obj.colors(2:7,:));
 
             scatter(obj.pT.xy(obj.currentPointIndex,1),...
@@ -107,6 +139,7 @@ classdef PNPGUI < handle
             for m = 1:1:size(obj.pT.centric,1)
                 plot(obj.pT.centric(m,:),'--','DisplayName',strcat('Group:',32,num2str(m)));
             end
+            xlim([0,size(obj.pT.centric,2)]);
             hold off;
         end
 
@@ -181,6 +214,21 @@ classdef PNPGUI < handle
             obj.isShowGroup(varargin{1}.Value) = 0;
             obj.update();
         end
+        
+        function on3DViewClick(obj,varargin)
+            if obj.is3DView
+                obj.is3DView = false;
+                set(obj.h3DViewButton,'string','Go 3D View');
+            else
+                if obj.isKeepRange
+                    warndlg('Please unable KeepRange Button first!');
+                    return;
+                end
+                obj.is3DView = true;
+                set(obj.h3DViewButton,'string','Go 2D View');
+            end
+            obj.update();
+        end
     end
 
     methods (Static)
@@ -193,6 +241,23 @@ classdef PNPGUI < handle
                         scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)),'MarkerFaceColor',colors(mod(m,L),:));  
                     else
                         scatter(trace(Tag==m,1),trace(Tag == m,2),10,'filled','DisplayName',strcat('Grounp: ',num2str(m)),'MarkerFaceColor',colors(L,:));  
+                    end
+                end
+            end
+        end
+        function [] = scatterGroupTo3(Tag,k,trace,isShow,colors,offset)
+            L = size(colors,1);
+            timeIndices = (1:1:size(trace,1)) + offset;
+            hold on;
+            for m = 1:1:k
+                if(~isShow(m))
+                    subIndex = (Tag == m);                   
+                    if mod(m,L)
+                        scatter3(trace(subIndex,1),trace(subIndex,2),timeIndices(subIndex),10,...
+                            'filled','DisplayName',strcat('Grounp: ',num2str(m)),'MarkerFaceColor',colors(mod(m,L),:));  
+                    else
+                        scatter3(trace(subIndex,1),trace(subIndex,2),timeIndices(subIndex),10,...
+                            'filled','DisplayName',strcat('Grounp: ',num2str(m)),'MarkerFaceColor',colors(L,:));  
                     end
                 end
             end
