@@ -35,12 +35,21 @@ classdef NPMotionTest
         function h = plotC(obj)
             figure;
             c = lines(obj.k + 1);
-            plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+            if obj.dimension > 1
+                plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+            else
+                scatter(1,obj.centric(1),30,c(2,:),'filled','DisplayName','Group:1');
+            end
             hold on;
             for m = 2:1:obj.k
-                plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                if obj.dimension > 1
+                    plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                else
+                    scatter(1,obj.centric(m),30,c(m+1,:),'filled','DisplayName',strcat('Group:',num2str(m)));
+                end
             end
             hold off;
+            box on;
         end
         % plot(bgData = velocity,grounpIndex = all);
         function [] = plot(obj,varargin)
@@ -160,6 +169,7 @@ classdef NPMotionTest
                 hold on;
             else
                 hA = varargin{1};
+                hold on;
             end
             c = lines(obj.k + 1);
             tmp = 1:1:size(obj.xy,1);
@@ -171,6 +181,7 @@ classdef NPMotionTest
                 tmpXY = tmpXY - tmpXY(1,:);
                 plot(hA,tmpXY(:,1),tmpXY(:,2),'Color',c(groupIndex + 1,:));
             end
+            box on;
         end
     end    
     
