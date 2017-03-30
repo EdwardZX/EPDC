@@ -55,6 +55,11 @@ classdef MultiPro < handle
                 return;
             end
             
+            if size(xy,2) ~= 2
+                disp('ERROR: addParticle func should be called in format obj.addParticle(xy,data,varargin !)');
+                return;
+            end
+            
             [newLength,newDim] = size(data);
             
             if or(obj.dataDim == newDim,obj.dataDim == 0)
