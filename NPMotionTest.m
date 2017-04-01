@@ -1,4 +1,4 @@
-classdef NPMotionTest
+classdef NPMotionTest < handle
    
     properties
         timeDelay;
@@ -50,8 +50,46 @@ classdef NPMotionTest
             end
             hold off;
             box on;
+            legend('show');
+        end
+
+        function [] = mergeGroup(obj,g1,g2)
+            if and(and(g1 > 0 , g2 > 0),and(g1 <= obj.k,g2<=obj.k))
+                numG1 = length(obj.indexTag(obj.indexTag == g1));
+                numG2 = length(obj.indexTag(obj.indexTag == g2));
+                obj.indexTag(obj.indexTag == g2) = g1;
+                obj.k = obj.k - 1;
+                tmp = obj.centric(g2,:);
+                obj.centric(g2,:) = [];
+                obj.centric(g1,:) = (obj.centric(g1,:) * numG1 + tmp * numG2)/(numG1 + numG2);
+            else
+                disp('ERROR: input invalid parameter!');
+            end
         end
         % plot(bgData = velocity,grounpIndex = all);
+        
+        function [] = autoMergeGroup(obj,meanThres,corrThres)
+            for m = 1:1:(obj.k - 1)
+                for n = (m + 1):1:obj.k
+                    meanDiff = abs(mean(obj.centric(m,:)) - mean(obj.centric(n,:)));
+                    cor = abs(corrcoef(obj.centric(m,:),obj.centric(n,:)));
+                    cor = cor(2);
+                    if and(meanDiff < (range(obj.centric(:)) * meanThres), cor > corrThres)
+                        plot(obj.centric(m,:));
+                        hold on;
+                        plot(obj.centric(n,:));
+                        ylim([min(obj.centric(:)),max(obj.centric(:))]);
+                        hold off;
+                        pause;
+                        fprintf(1,'Group: %d,%d: meanDiff: %.3f, corr: %.3f\n',m,n,meanDiff/range(obj.centric(:)),cor);
+                        obj.mergeGroup(m,n);
+                        obj.autoMergeGroup(meanThres,corrThres);
+                        break;
+                    end
+                end
+            end
+            fprintf('Done!\n');
+        end
         function [] = plot(obj,varargin)
             figure;
             if nargin >= 2
