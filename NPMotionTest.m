@@ -16,6 +16,10 @@ classdef NPMotionTest < handle
     properties (Access = private)
         resultData;
     end
+    
+    properties(Dependent)
+        totalDistance;
+    end
      
     methods
         function obj = NPMotionTest(analysisMethod,xy,resultData,indexTag,header,centric,velocity,tau,D,k)
@@ -36,32 +40,58 @@ classdef NPMotionTest < handle
             figure;
             c = lines(obj.k + 1);
             if obj.dimension > 1
-                plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                if ~strcmp(obj.analysisMethod,'msd')
+                    plot(1:1:obj.dimension,obj.centric(1,end:-1:1),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                else
+                    plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                end                 
             else
                 scatter(1,obj.centric(1),30,c(2,:),'filled','DisplayName','Group:1');
             end
             hold on;
             for m = 2:1:obj.k
                 if obj.dimension > 1
-                    plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                    if ~strcmp(obj.analysisMethod,'msd')
+                        plot(1:1:obj.dimension,obj.centric(m,end:-1:1),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                    else
+                        plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                    end 
                 else
                     scatter(1,obj.centric(m),30,c(m+1,:),'filled','DisplayName',strcat('Group:',num2str(m)));
                 end
             end
             hold off;
             box on;
+            xlim([1,obj.dimension]);
+            if ~strcmp(obj.analysisMethod,'msd')
+                xlabel('Ordered Time-dependent Feature Vector');
+            else
+                xlabel('Time lag')
+            end
             legend('show');
+        end
+        
+        function sumDis = get.totalDistance(obj)
+            % code need to be optimized
+            sumDis = 0;
+            for m = 1:1:obj.k
+                sumDis = sumDis + sum(pdist2(obj.centric(m,:),obj.resultData(obj.indexTag==m,:)));
+            end
         end
 
         function [] = mergeGroup(obj,g1,g2)
             if and(and(g1 > 0 , g2 > 0),and(g1 <= obj.k,g2<=obj.k))
                 numG1 = length(obj.indexTag(obj.indexTag == g1));
                 numG2 = length(obj.indexTag(obj.indexTag == g2));
-                obj.indexTag(obj.indexTag == g2) = g1;
-                obj.k = obj.k - 1;
-                tmp = obj.centric(g2,:);
-                obj.centric(g2,:) = [];
-                obj.centric(g1,:) = (obj.centric(g1,:) * numG1 + tmp * numG2)/(numG1 + numG2);
+                if and(numG1>0,numG2>0)
+                    obj.indexTag(obj.indexTag == g2) = g1;
+                    obj.k = obj.k - 1;
+                    tmp = obj.centric(g2,:);
+                    obj.centric(g2,:) = [];
+                    obj.centric(g1,:) = (obj.centric(g1,:) * numG1 + tmp * numG2)/(numG1 + numG2);
+                else
+                    disp('ERROR: invalid group index!');
+                end
             else
                 disp('ERROR: input invalid parameter!');
             end
@@ -90,6 +120,7 @@ classdef NPMotionTest < handle
             end
             fprintf('Done!\n');
         end
+        
         function [] = plot(obj,varargin)
             figure;
             if nargin >= 2
@@ -131,7 +162,7 @@ classdef NPMotionTest < handle
         function [] = plotTest(obj,hAxes,bgData,varargin)
             plot(hAxes,bgData,'DisplayName','velocity of NP');
             hold on;
-            markerSize = 15;
+            markerSize = 10;
             if nargin == 4
                 [~,I] = obj.getResult(varargin{1});
                 scatter(hAxes,I,bgData(I),markerSize,'filled','DisplayName',strcat('Group ',num2str(varargin{1})));
@@ -144,7 +175,8 @@ classdef NPMotionTest < handle
             
             title(strcat(obj.analysisMethod,32,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
-        end           
+        end      
+        
         function [result,Index] = getResult(obj,varargin)
             if isempty(varargin)
                 Index = obj.realIndex;
@@ -161,6 +193,7 @@ classdef NPMotionTest < handle
             indexResult(:,1) = I;
             indexResult(:,2:end) = r;
         end
+        
         function [data] = getResultAt(obj,indices)
             data = obj.resultData(indices,:);
         end
@@ -198,9 +231,10 @@ classdef NPMotionTest < handle
             xlabel('Group Index of K-means');
             ylabel('percentage in selected range ( % )');
             title(['Histogram of the count of different Group from time index ' num2str(tmpMin) ' to ' num2str(tmpMax)]);
+            set(gca,'XTick',1:1:obj.dimension);
             hold off;
         end
-        function  plotEmpTrace(obj,groupIndex,varargin)
+        function plotEmpTrace(obj,groupIndex,varargin)
             if isempty(varargin)
                 figure;
                 hA = axes;
@@ -220,6 +254,17 @@ classdef NPMotionTest < handle
                 plot(hA,tmpXY(:,1),tmpXY(:,2),'Color',c(groupIndex + 1,:));
             end
             box on;
+        end
+        
+        function tmp = reClass(obj,linker,k,comd,p,optTime)
+            [I,C,~] = optKMeans(obj.resultData,k,comd,p,optTime,linker);
+            tmp = NPMotionTest('uni',obj.xy,obj.resultData,I,obj.header,C,obj.velocity,obj.timeDelay,obj.dimension,obj.k);
+            subplot(2,1,1);
+            obj.plotTest(gca,obj.velocity);
+            title('Origin class result');
+            subplot(2,1,2);
+            tmp.plotTest(gca,obj.velocity);
+            title(strcat('Origin class result, optimization times:',32,num2str(optTime)));
         end
     end    
     
