@@ -32,12 +32,17 @@ classdef ParticleRandMerge < handle
             obj.typeSpec = 1:1:4;
         end
 
-        function merge(obj)
+        function merge(obj,varargin)
+            if nargin > 1
+                isPlot = varargin{1};
+            else
+                isPlot = true;
+            end
         	% init param to merge
         	obj.trackLength = round(rand(obj.mergeNum,1) * range(obj.stepRange) + obj.stepRange(1));
         	obj.mergeResult = zeros(sum(obj.trackLength),3);
-            obj.mergeTypeIndex = round(rand(obj.mergeNum,1) * (length(obj.typeSpec) - 1) + 1);  %% 1 for ND | 2 for CD | 3 for AD | 4 for AM
-            obj.mergeTypeIndex = obj.typeSpec(obj.mergeTypeIndex);
+            obj.mergeTypeIndex = round(rand(obj.mergeNum,1) * (length(obj.typeSpec) - 1) + 1);  
+            obj.mergeTypeIndex = obj.typeSpec(obj.mergeTypeIndex); %% 1 for ND | 2 for CD | 3 for AD | 4 for AM
             obj.mergeMember = zeros(obj.mergeNum,1);
         	obj.particleSample = {SampleContainer(1:1:obj.particleData{1}.particleNum,obj.particleData{1}.particleNum),...
                                   SampleContainer(1:1:obj.particleData{2}.particleNum,obj.particleData{2}.particleNum),...
@@ -46,23 +51,72 @@ classdef ParticleRandMerge < handle
 
             % init pos offset
         	lastPos = zeros(1,3);
-
+            if isPlot
+                member_feature = zeros(obj.mergeNum,3); 
+            end
         	for m = 1:1:obj.mergeNum
         		[tmpTrace,index] = obj.getTraceFrom(obj.mergeTypeIndex(m),obj.trackLength(m));
+                if isPlot
+                    [~,~,member_feature(m,1),member_feature(m,2),member_feature(m,3)] = MSA(tmpTrace,length(tmpTrace),0);
+                end
                 obj.mergeMember(m) = index;
         		obj.mergeResult(obj.startFrom(m) - 1 + (1:1:obj.trackLength(m)),:) = tmpTrace + repmat(lastPos,[obj.trackLength(m),1]);
         		lastPos = obj.mergeResult(obj.startFrom(m) - 1 + obj.trackLength(m),:);
-        	end
+            end
+            if isPlot
+                c = lines;
+                color_map = c([2,3,4,5],:);
+                figure;
+                scatter3(member_feature(:,1),member_feature(:,2),member_feature(:,3),...
+                         30,color_map(obj.mergeTypeIndex,:),'filled');
+                xlabel('Alpha');
+                ylabel('D');
+                zlabel('MSS');
+                xlim([0,2]);
+                ylim([0,max(member_feature(:,2))*1.2]);
+                zlim([0,1]);
+                box on;
+            end
+        end
+        
+        function simpleMerge(obj)
+            obj.mergeTypeIndex = randsample(obj.typeSpec,obj.mergeNum,'true');
+            obj.trackLength = zeros(obj.mergeNum,1);
+            obj.mergeResult = [];
+            mergeTraceIndex = cell(length(obj.typeSpec),1);
+            obj.mergeMember = zeros(obj.mergeNum,1);
+            for m = 1:1:length(obj.typeSpec)
+                type = obj.typeSpec(m);
+                mergeTraceIndex{m} = randsample(1:1:obj.particleData{type}.particleNum,sum(obj.mergeTypeIndex==type),'true');
+            end
+            lastPos = zeros(1,3);
+            for m = 1:1:obj.mergeNum
+                type = obj.mergeTypeIndex(m);
+                traceIndex = mergeTraceIndex{obj.typeSpec==type}(1);
+                mergeTraceIndex{obj.typeSpec==type}(1) = [];
+                tmpTrace = obj.particleData{type}.getParticle(traceIndex);
+                tmpTrace = tmpTrace(:,2:4);
+                obj.mergeMember(m) = traceIndex;
+                obj.trackLength(m) = length(tmpTrace) - 1;
+                modified_trace = tmpTrace + repmat(lastPos,[length(tmpTrace),1]);
+                modified_trace = modified_trace(2:end,:);
+                lastPos = modified_trace(end,:);
+                obj.mergeResult = [obj.mergeResult;modified_trace];
+            end           
         end
 
-        function plotMerge(obj,varargin)
+        function plotMerge(obj,isSimple,varargin)
         	if isempty(obj.mergeResult)
-        		obj.merge();
+                if isSimple
+                    obj.simpleMerge();
+                else
+                    obj.merge();
+                end
         	end
 
         	if isempty(varargin)
         		hf = figure;
-        		set(hf,'KeyPressFcn',@(sender,eventArg)obj.onSpaceDown(sender,eventArg));
+        		set(hf,'KeyPressFcn',@(sender,eventArg)obj.onSpaceDown(sender,eventArg,isSimple));
                 hA = axes;
         		plot(hA,obj.mergeResult(:,1),obj.mergeResult(:,2),'Color',obj.drawColor(1,:));
         		hold on;
@@ -76,6 +130,7 @@ classdef ParticleRandMerge < handle
         	for m = 1:1:obj.mergeNum
                 starter = obj.startFrom(m);
         		ender = starter + obj.trackLength(m) - 1;
+                hA.NextPlot = 'add';
         		hs = scatter(hA,obj.mergeResult(starter:ender,1),obj.mergeResult(starter:ender,2),10,obj.drawColor(obj.mergeTypeIndex(m)+1,:),'filled');
                 if showTag(obj.mergeTypeIndex(m))
                     set(hs,'DisplayName',obj.typeName(obj.mergeTypeIndex(m)));
@@ -83,9 +138,11 @@ classdef ParticleRandMerge < handle
                 else
                     set(get(get(hs,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');               
                 end
+                hA.NextPlot = 'replace';
             end
-            legend('show');
+            legend(hA,'show');
         	hold off;
+            title(hA,sprintf('Total length: %d',length(obj.mergeResult)));
         end
         
         function plotMean(obj,dim)
@@ -103,7 +160,7 @@ classdef ParticleRandMerge < handle
             result = obj.mergeResult;
             index = zeros(sum(obj.trackLength),1);
             for m = 1:1:obj.mergeNum
-        		index(obj.startFrom(m) - 1 + (1:1:obj.trackLength(m))) = obj.mergeTypeIndex(m);
+                index(obj.startFrom(m) - 1 + (1:1:obj.trackLength(m))) = obj.mergeTypeIndex(m);
         	end
         end
         
@@ -165,15 +222,20 @@ classdef ParticleRandMerge < handle
     	end
 
     	%% onSpaceDown: function description
-    	function onSpaceDown(obj,sender,eventArg)
+    	function onSpaceDown(obj,sender,eventArg,varargin)
             if strcmp(eventArg.Key,'space')
-                obj.merge();
+                isSimple = varargin{1};
+                if isSimple
+                    obj.simpleMerge();
+                else
+                    obj.merge();
+                end
                 tmp = get(sender,'Children');
-                obj.plotMerge(tmp(end));
+                obj.plotMerge(isSimple,tmp(end));
             end
         end
         
-        function name = typeName(obj,typeIndex)
+        function name = typeName(~,typeIndex)
             switch typeIndex
                 case 1
                     name = 'Normal Diddsion';
