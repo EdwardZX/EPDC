@@ -1,4 +1,5 @@
 function [ result ] = msd( vec,lag,varargin )
+    %function [ result ] = msd( vec,lag,varargin )
     if nargin == 2
         p = 2;
     else if nargin == 3
