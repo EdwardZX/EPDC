@@ -130,7 +130,7 @@ classdef MultiPro < handle
             data = obj.secondaryIndex(1,a:b);            
         end
         
-        function process(obj)
+        function process(obj,varargin)
             [~,obj.param,index] = ParamSetting(obj.particleNum);
             if index
                 
@@ -164,12 +164,16 @@ classdef MultiPro < handle
                 end
                 
                 % process k-means
+                if isempty(varargin)
+                    threshold = 0;
+                else
+                    threshold = varargin{1};
+                end
                 [obj.secondaryIndex,...
-                 obj.kMeansCentrality,~] = MultiPro.optKMeans(obj.secondaryData,...
-                                                              obj.param.k,...
-                                                              obj.param.distanceScale,...
-                                                              obj.param.order,...
-                                                              obj.param.optRepeat);
+                 obj.kMeansCentrality,~] = optKMeans(obj.secondaryData,obj.param.k,...
+                                                     obj.param.distanceScale,...
+                                                     obj.param.order,...
+                                                     obj.param.optRepeat,threshold);
                 
                 % create local Result
                 obj.pResult = cell(obj.particleNum,1);     
@@ -240,28 +244,6 @@ classdef MultiPro < handle
             end
             b = ref(num) + a - 1;
         end       
-    end
-    
-    methods (Static)
-        function [indexTag,C,D] = optKMeans(raw,k,comd,p,optTime)
-            disp('Optimization begin...');
-            disp(strcat('Total trial: ',num2str(optTime)));
-            [indexTag,C,D] = kMeans(raw,k,comd,p);
-            if optTime > 1
-                for m = 2:1:optTime
-                    [I,c,d] = kMeans(raw,k,comd,p);
-                    if(d<D)
-                        indexTag = I;
-                        C = c;
-                        D = d;
-                    end
-                end
-                disp(strcat('The optimized distance is: ',num2str(D)));
-            end    
-        end
-    end
-    
-    
-    
+    end    
 end
 
