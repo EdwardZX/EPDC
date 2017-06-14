@@ -60,15 +60,17 @@ classdef ParticleData < handle
         function h = plotMSD(obj,tau,varargin)
             if isempty(varargin)
                 r = obj.getMSD(tau);
-                plot(r(1,:),'Color',[0,0.45,0.75],'DisplayName','particle MSD');
+                r = [zeros(obj.particleNum,1),r];
+                plot(0:1:tau,r(1,:),'Color',[0,0.45,0.75],'DisplayName','particle MSD');
                 hold on;
-                h = plot(r(2:obj.particleNum,:)','Color',[0,0.45,0.75]);
+                h = plot(0:1:tau,r(2:obj.particleNum,:)','Color',[0,0.45,0.75]);
                 for m = 1:1:(obj.particleNum - 1)
                     set(get(get(h(m),'Annotation'),'LegendInformation'),'IconDisplayStyle','off'); 
                 end
                 return;
             end
-            h = plot(obj.getMSD(tau)',varargin{1});        
+            h = plot(obj.getMSD(tau)',varargin{1});   
+            xlim([0,tau]);
         end
         
         function h = plotAveMSD(obj,tau)
