@@ -64,6 +64,10 @@ classdef PNPGUI < handle
             obj.h3DViewButton = uicontrol('parent',obj.hFigure,'string','Go 3D View','pos',[obj.viewSize(3) - 80,obj.viewSize(4) - 49*11,80,49]);
             set(obj.h3DViewButton,'callback',@obj.on3DViewClick);
         end
+        
+        function r = getR(obj)
+            r = obj.pT;
+        end
 
     end
 
