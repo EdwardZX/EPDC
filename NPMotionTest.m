@@ -188,10 +188,8 @@ classdef NPMotionTest < handle
             end          
         end
         function [indexResult] = getIndexResult(obj,varargin)
-            indexResult = zeros(size(obj.resultData) + [0,1]);
-            [r,I] = obj.getResult(varargin);
-            indexResult(:,1) = I;
-            indexResult(:,2:end) = r;
+            [r,I] = obj.getResult(varargin{:});
+            indexResult = [I',r];
         end
         
         function [data] = getResultAt(obj,indices)
