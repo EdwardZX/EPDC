@@ -32,8 +32,8 @@ classdef ParticleRandMerge < handle
             obj.typeSpec = 1:1:4;
         end
 
-        function merge(obj,varargin)
-            if nargin > 1
+        function merge(obj,spec,varargin)
+            if ~isempty(varargin)
                 isPlot = varargin{1};
             else
                 isPlot = true;
@@ -41,7 +41,11 @@ classdef ParticleRandMerge < handle
         	% init param to merge
         	obj.trackLength = round(rand(obj.mergeNum,1) * range(obj.stepRange) + obj.stepRange(1));
         	obj.mergeResult = zeros(sum(obj.trackLength),3);
-            obj.mergeTypeIndex = round(rand(obj.mergeNum,1) * (length(obj.typeSpec) - 1) + 1);  
+            if isempty(spec)
+                obj.mergeTypeIndex = round(rand(obj.mergeNum,1) * (length(obj.typeSpec) - 1) + 1); 
+            else
+                obj.mergeTypeIndex = spec;
+            end
             obj.mergeTypeIndex = obj.typeSpec(obj.mergeTypeIndex); %% 1 for ND | 2 for CD | 3 for AD | 4 for AM
             obj.mergeMember = zeros(obj.mergeNum,1);
         	obj.particleSample = {SampleContainer(1:1:obj.particleData{1}.particleNum,obj.particleData{1}.particleNum),...
@@ -105,12 +109,12 @@ classdef ParticleRandMerge < handle
             end           
         end
 
-        function plotMerge(obj,isSimple,varargin)
+        function plotMerge(obj,isSimple,specificity,varargin)
         	if isempty(obj.mergeResult)
                 if isSimple
                     obj.simpleMerge();
                 else
-                    obj.merge();
+                    obj.merge(specificity);
                 end
         	end
 
