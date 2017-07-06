@@ -22,7 +22,7 @@ function varargout = SegShowUI(varargin)
 
 % Edit the above text to modify the response to help SegShowUI
 
-% Last Modified by GUIDE v2.5 05-Jul-2017 20:32:06
+% Last Modified by GUIDE v2.5 06-Jul-2017 20:38:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,6 +60,7 @@ linkaxes([handles.axes_main,handles.axes_seg,...
 handles.model.onMainDraw(handles.axes_main,handles.axes_main_2);
 handles.model.onSegDraw(handles.axes_seg,handles.axes_seg_2);
 handles.model.onSwitchMain(handles,1);
+handles.btn_active.Enable = 'off';
 % Update handles structure
 guidata(hObject, handles);
 
@@ -343,3 +344,11 @@ function btn_holdTrace_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.model.onHoldTrace(hObject,handles.axes_main);
+
+
+% --- Executes on button press in btn_active.
+function btn_active_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_active (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onActivePlot(hObject);

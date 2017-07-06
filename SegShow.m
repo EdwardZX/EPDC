@@ -12,7 +12,8 @@ classdef SegShow < handle
         selectFrom,
         selectTo,
         selectIndices,
-        activeIndex
+        activeIndex,
+        isActivePlot
     end
     
     properties(Access=private)
@@ -68,6 +69,7 @@ classdef SegShow < handle
             obj.selectIndices = [];
             obj.show();
             obj.hPa = [];
+            obj.isActivePlot = false;
         end
         
         function b = get.isHoldingPlot(obj)
@@ -110,9 +112,13 @@ classdef SegShow < handle
                 case SegPlotType.NormalScatter
                     scatter(hPlot,obj.tmpXData,obj.tmpYData,15,'r','filled');
                 case SegPlotType.PolarScatter
-                    figure;
-                    polarplot(obj.tmpXData,obj.tmpYData,'.','MarkerSize',15);
-                    thetalim([0,90]);
+                    if obj.isActivePlot
+                        figure;
+                        hp = polaraxes;
+                        polarplot(hp,obj.tmpXData*pi/180,obj.tmpYData,'.','MarkerSize',15);
+                        thetalim(hp,[0,90]);
+                        title(hp,sprintf('From:%d,To:%d',obj.selectIndices(1),obj.selectIndices(2)));
+                    end
                 case SegPlotType.Histogram
                     hh = histogram(hPlot,obj.tmpXData,'Normalization','probability');
                     if ~isempty(obj.holdPlotRange)
@@ -243,6 +249,10 @@ classdef SegShow < handle
                 case 1
                     obj.plotType = SegPlotType.NormalPlot;
                     handles.pop_yData.Enable = 'on';
+                    if obj.isActivePlot
+                        obj.onActivePlot(handles.btn_active);
+                    end
+                    handles.btn_active.Enable = 'off';
 %                     if obj.hPa
 %                         obj.hPa.Visible = 'off';
 %                     end
@@ -250,6 +260,10 @@ classdef SegShow < handle
                 case 2
                     obj.plotType = SegPlotType.NormalScatter;
                     handles.pop_yData.Enable = 'on';
+                    if obj.isActivePlot
+                        obj.onActivePlot(handles.btn_active);
+                    end
+                    handles.btn_active.Enable = 'off';
 %                     if obj.hPa
 %                         obj.hPa.Visible = 'off';
 %                     end
@@ -257,6 +271,7 @@ classdef SegShow < handle
                 case 3
                     obj.plotType = SegPlotType.PolarScatter;
                     handles.pop_yData.Enable = 'on';
+                    handles.btn_active.Enable = 'on';
 %                     if isempty(obj.hPa)
 %                         obj.hPa = polaraxes('Parent',handles.figure1,...
 %                                             'Position',handles.axes_plot.Position);
@@ -266,6 +281,10 @@ classdef SegShow < handle
                 case 4
                     obj.plotType = SegPlotType.Histogram;
                     handles.pop_yData.Enable = 'off';
+                    if obj.isActivePlot
+                        obj.onActivePlot(handles.btn_active);
+                    end
+                    handles.btn_active.Enable = 'off';
 %                     if obj.hPa
 %                         obj.hPa.Visible = 'off';
 %                     end
@@ -332,6 +351,16 @@ classdef SegShow < handle
                                         min(obj.selectTo,length(obj.segRes{index}.resCell)));
             end
         end
+        
+        function onActivePlot(obj,hBtn)
+            if obj.isActivePlot
+                hBtn.BackgroundColor = [1,1,1];
+                obj.isActivePlot = false;
+            else
+                hBtn.BackgroundColor = [0.47,0.67,0.19];
+                obj.isActivePlot = true;
+            end
+        end
     end
     
     methods(Access=private)
@@ -342,7 +371,7 @@ classdef SegShow < handle
             cla(hA);
             hA.NextPlot = 'add';
             r.plotTest(hA,r.rawData);
-            xlim([1,length(r.rawData)]);
+            xlim(hA,[1,length(r.rawData)]);
             if obj.selectFrom > 0
                 tmpY = hA.YLim;
                 line(hA,ones(1,2)*obj.selectIndices(1),tmpY,...
