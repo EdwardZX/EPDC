@@ -11,6 +11,7 @@ classdef NPMotionTest < handle
         realIndex;
         indexTag;
         centric;
+        rawData
     end
     
     properties (Access = private)
@@ -22,7 +23,7 @@ classdef NPMotionTest < handle
     end
      
     methods
-        function obj = NPMotionTest(analysisMethod,xy,resultData,indexTag,header,centric,velocity,tau,D,k)
+        function obj = NPMotionTest(analysisMethod,xy,raw,resultData,indexTag,header,centric,velocity,tau,D,k)
             obj.timeDelay = tau;
             obj.dimension = D;
             obj.k = k;
@@ -34,6 +35,7 @@ classdef NPMotionTest < handle
             obj.header = header;
             obj.realIndex = header:1:(size(resultData,1) + header - 1);
             obj.centric = centric;
+            obj.rawData = raw;
         end     
         % plotC: plot centric in one axes
         function h = plotC(obj)
@@ -160,6 +162,9 @@ classdef NPMotionTest < handle
         
         % plotTest(hAxes,bgData,grounpIndex = all)
         function [] = plotTest(obj,hAxes,bgData,varargin)
+            if size(bgData,2) > 1
+                bgData = obj.velocity;
+            end
             plot(hAxes,bgData,'DisplayName','velocity of NP');
             hold on;
             markerSize = 10;
@@ -173,7 +178,7 @@ classdef NPMotionTest < handle
                 end
             end
             
-            title(strcat(obj.analysisMethod,32,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
+            title(hAxes,strcat(obj.analysisMethod,32,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
         end      
         
