@@ -49,7 +49,7 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,optTime,isSpeak,
         else
           [I,C,~] = optKMeans(data,param(m,3),comd,param(m,4),optTime,varargin{1});
         end
-        result{m} = NPMotionTest(analysisMethod,xy,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
+        result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
         if isSpeak
             if strcmp(analysisMethod,'uni')
