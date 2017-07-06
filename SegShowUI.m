@@ -22,7 +22,7 @@ function varargout = SegShowUI(varargin)
 
 % Edit the above text to modify the response to help SegShowUI
 
-% Last Modified by GUIDE v2.5 03-Jul-2017 16:12:48
+% Last Modified by GUIDE v2.5 05-Jul-2017 20:32:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,9 +55,11 @@ function SegShowUI_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for SegShowUI
 handles.output = hObject;
 handles.model = varargin{1};
-linkaxes([handles.axes_main,handles.axes_seg],'x');
-handles.model.onMainDraw(handles.axes_main);
-handles.model.onSegDraw(handles.axes_seg);
+linkaxes([handles.axes_main,handles.axes_seg,...
+          handles.axes_main_2,handles.axes_seg_2],'x');
+handles.model.onMainDraw(handles.axes_main,handles.axes_main_2);
+handles.model.onSegDraw(handles.axes_seg,handles.axes_seg_2);
+handles.model.onSwitchMain(handles,1);
 % Update handles structure
 guidata(hObject, handles);
 
@@ -77,34 +79,49 @@ varargout{1} = handles.output;
 
 
 
-function edt_seg_Callback(hObject, eventdata, handles)
-% hObject    handle to edt_seg (see GCBO)
+function edt_segFrom_Callback(hObject, eventdata, handles)
+% hObject    handle to edt_segFrom (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 str = get(hObject,'String');
-if isempty(strfind(str,' '))
-    try
-        handles.model.onSegSelect(handles.axes_seg,handles.axes_plot,...
-                                  str2double(str),str2double(str));
-    catch
-        errordlg(sprintf('Failed Parse Input: %s',str));
-    end
-else
-    strs = strsplit(str,' ');
-    try
-        handles.model.onSegSelect(handles.axes_seg,handles.axes_plot,...
-                                  str2double(strs{1}),str2double(strs{2}));
-    catch
-        errordlg(sprintf('Failed Parse Input: %s',str));
-    end
+try
+    num = str2double(str);
+catch
+    errordlg(sprintf('Failed Parse Input: %s',str));
 end
-% Hints: get(hObject,'String') returns contents of edt_seg as text
-%        str2double(get(hObject,'String')) returns contents of edt_seg as a double
-
+handles.model.onSegFrom(num,handles);
+% Hints: get(hObject,'String') returns contents of edt_segFrom as text
+%        str2double(get(hObject,'String')) returns contents of edt_segFrom as a double
 
 % --- Executes during object creation, after setting all properties.
-function edt_seg_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edt_seg (see GCBO)
+function edt_segFrom_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edt_segFrom (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edt_segTo_Callback(hObject, eventdata, handles)
+% hObject    handle to edt_segTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+str = get(hObject,'String');
+try
+    num = str2double(str);
+catch
+    errordlg(sprintf('Failed Parse Input: %s',str));
+end
+handles.model.onSegTo(num,handles);
+% Hints: get(hObject,'String') returns contents of edt_segTo as text
+%        str2double(get(hObject,'String')) returns contents of edt_segTo as a double
+
+% --- Executes during object creation, after setting all properties.
+function edt_segTo_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edt_segTo (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -124,14 +141,13 @@ if isempty(strfind(str,' '))
 else
     str = strsplit(str,' ');
     try
-        handles.model.onYRange(handles.axes_plot,str2double(str{1}),str2double(str{2}));
+        handles.model.onYRange(handles,str2double(str{1}),str2double(str{2}));
     catch
         errordlg('Failed Parse Input: %s',str);
     end
 end
 % Hints: get(hObject,'String') returns contents of edt_yrange as text
 %        str2double(get(hObject,'String')) returns contents of edt_yrange as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function edt_yrange_CreateFcn(hObject, eventdata, handles)
@@ -157,14 +173,13 @@ if isempty(strfind(str,' '))
 else
     strs = strsplit(str,' ');
     try
-        handles.model.onXRange(handles.axes_plot,str2double(strs{1}),str2double(strs{2}));
+        handles.model.onXRange(handles,str2double(strs{1}),str2double(strs{2}));
     catch
         errordlg(sprintf('Failed Parse Input: %s',str));
     end
 end
 % Hints: get(hObject,'String') returns contents of edt_xrange as text
 %        str2double(get(hObject,'String')) returns contents of edt_xrange as a double
-
 
 % --- Executes during object creation, after setting all properties.
 function edt_xrange_CreateFcn(hObject, eventdata, handles)
@@ -199,3 +214,132 @@ function btn_hold_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.model.onHoldRange(hObject,handles.axes_plot);
+
+
+% --- Executes on button press in btn_curFigIndicator_1.
+function btn_curFigIndicator_1_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_curFigIndicator_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onSwitchMain(handles,1);
+
+% --- Executes on button press in btn_curFigIndicator_2.
+function btn_curFigIndicator_2_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_curFigIndicator_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onSwitchMain(handles,2);
+
+
+% --- Executes on button press in btn_fromLast.
+function btn_fromLast_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_fromLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onSegFrom(handles.model.selectFrom-1,handles);
+
+
+% --- Executes on button press in btn_fromNext.
+function btn_fromNext_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_fromNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onSegFrom(handles.model.selectFrom+1,handles);
+
+% --- Executes on button press in btn_toLast.
+function btn_toLast_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_toLast (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onSegTo(handles.model.selectTo-1,handles);
+
+% --- Executes on button press in btn_toNext.
+function btn_toNext_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_toNext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onSegTo(handles.model.selectTo+1,handles);
+
+
+% --- Executes on selection change in pop_xData.
+function pop_xData_Callback(hObject, eventdata, handles)
+% hObject    handle to pop_xData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onXDataType(get(hObject,'Value'),handles);
+% Hints: contents = cellstr(get(hObject,'String')) returns pop_xData contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pop_xData
+
+
+% --- Executes during object creation, after setting all properties.
+function pop_xData_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pop_xData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in pop_yData.
+function pop_yData_Callback(hObject, eventdata, handles)
+% hObject    handle to pop_yData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onYDataType(get(hObject,'Value'),handles);
+% Hints: contents = cellstr(get(hObject,'String')) returns pop_yData contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pop_yData
+
+
+% --- Executes during object creation, after setting all properties.
+function pop_yData_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pop_yData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in pop_plotType.
+function pop_plotType_Callback(hObject, eventdata, handles)
+% hObject    handle to pop_plotType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+v = get(hObject,'Value');
+% if v == 3
+%     tmpP = handles.axes_plot.Position;
+%     delete(handles.axes_plot);
+%     handles.axes_plot = polaraxes('Parent',handles.figure1,'Position',tmpP);
+%     guidata(hObject,handles);
+% end
+handles.model.onPlotTypeSelected(v,handles);
+% Hints: contents = cellstr(get(hObject,'String')) returns pop_plotType contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from pop_plotType
+
+
+% --- Executes during object creation, after setting all properties.
+function pop_plotType_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to pop_plotType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in btn_holdTrace.
+function btn_holdTrace_Callback(hObject, eventdata, handles)
+% hObject    handle to btn_holdTrace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.model.onHoldTrace(hObject,handles.axes_main);
