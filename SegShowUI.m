@@ -22,7 +22,7 @@ function varargout = SegShowUI(varargin)
 
 % Edit the above text to modify the response to help SegShowUI
 
-% Last Modified by GUIDE v2.5 06-Jul-2017 20:38:23
+% Last Modified by GUIDE v2.5 07-Jul-2017 15:02:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
