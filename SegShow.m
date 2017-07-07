@@ -352,13 +352,14 @@ classdef SegShow < handle
             end
         end
         
-        function onActivePlot(obj,hBtn)
+        function onActivePlot(obj,hBtn,handles)
             if obj.isActivePlot
                 hBtn.BackgroundColor = [1,1,1];
                 obj.isActivePlot = false;
             else
                 hBtn.BackgroundColor = [0.47,0.67,0.19];
                 obj.isActivePlot = true;
+                obj.onPlotDraw(handles);
             end
         end
     end
