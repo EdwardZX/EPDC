@@ -29,6 +29,7 @@ classdef SegShow < handle
         holdLeftRange,
         plotType,
         hPa
+        cachedDiffAlphaCell
     end
     
     properties(Dependent)
@@ -39,12 +40,13 @@ classdef SegShow < handle
         %label: vel   --  mean velocity
         %       pol   --  mean polar
         %       dff   --  diffusion coeff
-        function obj = SegShow(r1,r2,segTolerence,offset1,offset2,polar)
+        function obj = SegShow(r1,r2,segTolerence,polar)
             obj.npRes = {r1,r2};
             obj.xy = r1.xy;
             obj.vel = r1.velocity;
+            obj.cachedDiffAlphaCell = {obj.cachedDA(r1.header),obj.cachedDA(r2.header)};
             obj.tolerence = segTolerence;
-            obj.offset = [offset1,offset2];
+            obj.offset = [r1.header,r2.header];
             obj.polar = polar;
             obj.plotType = SegPlotType.NormalPlot;
             obj.xFunc = obj.dataEnum2func(SegAxisData.Velocity);
@@ -54,12 +56,12 @@ classdef SegShow < handle
             maxGroupNum = max([r1.k,r2.k]);
             obj.cm = [0,0,0;lines(maxGroupNum+1)];
             obj.cm(2,:) = [];
-            obj.segRes = {tagSegFunc(r1.indexTag,obj.vel(offset1:end),segTolerence,@(x)mean(x)),...
-                          tagSegFunc(r2.indexTag,obj.vel(offset2:end),segTolerence,@(x)mean(x))};
+            obj.segRes = {tagSegFunc(r1.indexTag,obj.vel(r1.header:end),segTolerence,@(x)mean(x)),...
+                          tagSegFunc(r2.indexTag,obj.vel(r2.header:end),segTolerence,@(x)mean(x))};
             obj.I = {SegShow.segCells2Index(obj.segRes{1}),...
                      SegShow.segCells2Index(obj.segRes{2})};
-            obj.I{1} = [(0:1:maxGroupNum)';nan(offset1-2-maxGroupNum,1);obj.I{1}];
-            obj.I{2} = [(0:1:maxGroupNum)';nan(offset2-2-maxGroupNum,1);obj.I{2}];
+            obj.I{1} = [(0:1:maxGroupNum)';nan(r1.header-2-maxGroupNum,1);obj.I{1}];
+            obj.I{2} = [(0:1:maxGroupNum)';nan(r2.header-2-maxGroupNum,1);obj.I{2}];
             obj.tmpI = obj.I;
             obj.holdPlotRange = [];
             obj.holdLeftRange = [];
@@ -306,6 +308,10 @@ classdef SegShow < handle
                     type = SegAxisData.PosX;
                 case 4
                     type = SegAxisData.PosY;
+                case 5
+                    type = SegAxisData.HistDiff;
+                case 6
+                    type = SegAxisData.HistAlpha;
             end
             obj.xFunc = obj.dataEnum2func(type);
             obj.tmpXData = obj.xFunc(obj.selectIndices(1),obj.selectIndices(2));
@@ -323,6 +329,10 @@ classdef SegShow < handle
                     type = SegAxisData.PosX;
                 case 4
                     type = SegAxisData.PosY;
+                case 5
+                    type = SegAxisData.HistDiff;
+                case 6
+                    type = SegAxisData.HistAlpha;
             end
             obj.yFunc = obj.dataEnum2func(type);
             obj.tmpYData = obj.yFunc(obj.selectIndices(1),obj.selectIndices(2));
@@ -396,6 +406,10 @@ classdef SegShow < handle
                     hFunc = @obj.getPosX;
                 case SegAxisData.PosY
                     hFunc = @obj.getPosY;
+                case SegAxisData.HistDiff
+                    hFunc = @obj.getDiff;
+                case SegAxisData.HistAlpha
+                    hFunc = @obj.getAlpha;
             end
         end
         function plotData = getPosX(obj,startAt,endAt)
@@ -410,8 +424,19 @@ classdef SegShow < handle
         function plotData = getPolar(obj,startAt,endAt)
             plotData = obj.polar(startAt:endAt);
         end
-        function plotData = getDiff(obj,startAt,endAt)
-            plotData = startAt:endAt;
+        function d_al = cachedDA(obj,offset)
+            L = length(obj.xy);
+            d_al = zeros(L,2);
+            n = 1;
+            hBar = waitbar(0,'Caching D & alpha...');
+            for m = offset:L
+                histXY = obj.xy((m-offset+1):m,:);
+                tmp = SegShow.trace2diffAlpha(histXY);
+                d_al(m,:) = tmp;
+                waitbar(n/(L-offset),hBar);
+                n = n+1;
+            end
+            close(hBar);
 %             L = length(obj.segRes.resCell);
 %             plotData = [];
 %             for m = 1:1:L
@@ -426,6 +451,12 @@ classdef SegShow < handle
 %                      break;
 %                 end
 %             end
+        end
+        function plotData = getDiff(obj,startAt,endAt)
+            plotData  = obj.cachedDiffAlphaCell{obj.activeIndex}(startAt:endAt,1);
+        end
+        function plotData = getAlpha(obj,startAt,endAt)
+            plotData  = obj.cachedDiffAlphaCell{obj.activeIndex}(startAt:endAt,2);
         end
         function num = absIndex2groundIndex(obj,absI)
             cells = obj.segRes{obj.activeIndex}.resCell;
@@ -459,14 +490,25 @@ classdef SegShow < handle
                     nameStr = 'position x';
                 case SegAxisData.PosY
                     nameStr = 'position y';
+                case SegAxisData.HistDiff
+                    nameStr = 'Diffusion Coefficient';
+                case SegAxisData.HistAlpha
+                    nameStr = '$\alpha$';
+                    
             end
         end
-        function d = trace2dff(xy)
+        function d_al = trace2diffAlpha(xy)
+            L = length(xy);
+            lag = round(L/3);
+            msd_curve = msd(xy,lag);
+            d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[0.1,1]);           
+        end
+        function alpha = trace2alpha(xy)
             L = length(xy);
             lag = round(L/3);
             msd_curve = msd(xy,lag);
             d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[0.1,1]);
-            d = d_al(1);
+            alpha = d_al(2);
         end
     end
     

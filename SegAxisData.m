@@ -3,7 +3,9 @@ classdef SegAxisData
         Velocity,
         Polar,
         PosX,
-        PosY
+        PosY,
+        HistDiff,
+        HistAlpha
     end
 end
 
