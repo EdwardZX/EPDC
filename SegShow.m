@@ -13,7 +13,9 @@ classdef SegShow < handle
         selectTo,
         selectIndices,
         activeIndex,
-        isActivePlot
+        isActivePlot,
+        tmpXData,
+        tmpYData
     end
     
     properties(Access=private)
@@ -21,15 +23,14 @@ classdef SegShow < handle
         cm,
         I,
         tmpI,
-        tmpXData,
-        tmpYData,
         xlabelName,
         ylabelName,
         holdPlotRange,
         holdLeftRange,
         plotType,
-        hPa
-        cachedDiffAlphaCell
+        hPa,
+        cachedDiffAlphaCell,
+        figHandles
     end
     
     properties(Dependent)
@@ -69,21 +70,23 @@ classdef SegShow < handle
             obj.selectTo = -1;
             obj.activeIndex = -1;
             obj.selectIndices = [];
-            obj.show();
             obj.hPa = [];
             obj.isActivePlot = false;
+            obj.show();
         end
         
         function b = get.isHoldingPlot(obj)
             b = ~isempty(obj.holdPlotRange);
         end
         
-        function onMainDraw(obj,hMain,hMain2)
-            obj.drawLeft(hMain,obj.npRes{1});
-            obj.drawLeft(hMain2,obj.npRes{2});
+        function onMainDraw(obj)
+            obj.drawLeft(obj.figHandles.axes_main,obj.npRes{1});
+            obj.drawLeft(obj.figHandles.axes_main_2,obj.npRes{2});
         end
         
-        function onSegDraw(obj,hSeg,hSeg2)
+        function onSegDraw(obj)
+            hSeg = obj.figHandles.axes_seg;
+            hSeg2 = obj.figHandles.axes_seg_2;
             h1 = pcolor(hSeg,repmat(obj.tmpI{1}',10,1));
             h1.EdgeAlpha = 0;
             hSeg.XTickLabel = [];
@@ -101,25 +104,28 @@ classdef SegShow < handle
             colormap(obj.cm);
         end
         
-        function onPlotDraw(obj,handles)
-            hPlot = handles.axes_plot;
+        function [hf,ha] = onPlotDraw(obj)
+            hPlot = obj.figHandles.axes_plot;
+            hf = obj.figHandles.figure1; ha = obj.figHandles.axes_plot;
             switch obj.plotType
-                case SegPlotType.NormalPlot
-                    plot(hPlot,obj.tmpXData,obj.tmpYData,'b-','LineWidth',2);
+                case SegPlotType.NormalPlot             
                     if and(strcmp(obj.xlabelName,'position x'),strcmp(obj.ylabelName,'position y'))
+                        plot(hPlot,obj.xy(:,1),obj.xy(:,2),'Color',[0.75,0.75,0.75],'LineWidth',1.5);
                         hPlot.NextPlot = 'add';
                         scatter(hPlot,obj.tmpXData(1),obj.tmpYData(1),20,'r','filled');
-                        hPlot.NextPlot = 'replace';
                     end
+                    plot(hPlot,obj.tmpXData,obj.tmpYData,'b-','LineWidth',2);
+                    hPlot.NextPlot = 'replace';
                 case SegPlotType.NormalScatter
                     scatter(hPlot,obj.tmpXData,obj.tmpYData,15,'r','filled');
                 case SegPlotType.PolarScatter
                     if obj.isActivePlot
-                        figure;
+                        hf = figure;
                         hp = polaraxes;
                         polarplot(hp,obj.tmpXData*pi/180,obj.tmpYData,'.','MarkerSize',15);
                         thetalim(hp,[0,90]);
                         title(hp,sprintf('From:%d,To:%d',obj.selectIndices(1),obj.selectIndices(2)));
+                        ha = hp;
                     end
                 case SegPlotType.Histogram
                     hh = histogram(hPlot,obj.tmpXData,'Normalization','probability');
@@ -133,22 +139,25 @@ classdef SegShow < handle
             if and(~isempty(obj.holdPlotRange),obj.plotType ~= SegPlotType.PolarScatter)
 %                 obj.onXRange(handles,obj.holdPlotRange(1,1),obj.holdPlotRange(1,2));
 %                 obj.onYRange(handles,obj.holdPlotRange(2,1),obj.holdPlotRange(2,2));
-                handles.axes_plot.XLim = [obj.holdPlotRange(1,1),obj.holdPlotRange(1,2)];
-                handles.axes_plot.YLim = [obj.holdPlotRange(2,1),obj.holdPlotRange(2,2)];
+                obj.figHandles.axes_plot.XLim = [obj.holdPlotRange(1,1),obj.holdPlotRange(1,2)];
+                obj.figHandles.axes_plot.YLim = [obj.holdPlotRange(2,1),obj.holdPlotRange(2,2)];
             end
         end
         
-        function onCopyFig(obj,hPlot)
-            figure;
-            scatter(axes,hPlot.Children.XData,hPlot.Children.YData,15,'r','filled');
+        function [hf,ha] = onCopyFig(obj)
+            hPlot = obj.figHandles.axes_plot;
+            hf = figure;
+            ha = axes;
+            scatter(ha,hPlot.Children.XData,hPlot.Children.YData,15,'r','filled');
             xlim( hPlot.XLim);
             ylim (hPlot.YLim);
             xlabel(obj.xlabelName);
             ylabel(obj.ylabelName);
+            title(sprintf('From %d to %d',obj.selectIndices(1),obj.selectIndices(2)))
             box on;
         end
         
-        function onSegFrom(obj,num,handles)
+        function onSegFrom(obj,num)
             %keep in range
             if num <= 0
                 num = 1;
@@ -157,15 +166,15 @@ classdef SegShow < handle
             end
             
             obj.selectFrom = num;
-            handles.edt_segFrom.String = num2str(num);
+            obj.figHandles.edt_segFrom.String = num2str(num);
             if num > obj.selectTo
-                obj.onSegTo(num,handles)
+                obj.onSegTo(num)
             else
-                obj.onSegSelect(handles,obj.selectFrom,obj.selectTo);
+                obj.onSegSelect(obj.selectFrom,obj.selectTo);
             end
         end
         
-        function onSegTo(obj,num,handles)
+        function onSegTo(obj,num)
             %keep in range
             if num <= 0
                 num = 1;
@@ -174,21 +183,21 @@ classdef SegShow < handle
             end
             
             obj.selectTo = num;
-            handles.edt_segTo.String = num2str(num);
+            obj.figHandles.edt_segTo.String = num2str(num);
             if num < obj.selectFrom
-                obj.onSegFrom(num,handles)
-                obj.onSegSelect(handles,obj.selectFrom,obj.selectTo);
+                obj.onSegFrom(num)
+                obj.onSegSelect(obj.selectFrom,obj.selectTo);
                 return;
             end  
             if obj.selectFrom < 0
-                obj.onSegFrom(1,handles)
-                obj.onSegSelect(handles,obj.selectFrom,obj.selectTo);
+                obj.onSegFrom(1)
+                obj.onSegSelect(obj.selectFrom,obj.selectTo);
                 return;
             end
-            obj.onSegSelect(handles,obj.selectFrom,obj.selectTo);
+            obj.onSegSelect(obj.selectFrom,obj.selectTo);
         end
         
-        function onSegSelect(obj,handles,from,to)
+        function onSegSelect(obj,from,to)
             startAt = obj.segRes{obj.activeIndex}.resCell{from}(3)...
                       + obj.offset(obj.activeIndex) - 1;
             endAt = obj.segRes{obj.activeIndex}.resCell{to}(4)...
@@ -197,36 +206,38 @@ classdef SegShow < handle
             obj.tmpI = obj.I;
             obj.tmpI{1}(startAt:endAt) = 0;
             obj.tmpI{2}(startAt:endAt) = 0;
-            obj.onSegDraw(handles.axes_seg,handles.axes_seg_2);
-            obj.onMainDraw(handles.axes_main,handles.axes_main_2);
+            obj.onSegDraw();
+            obj.onMainDraw();
             
             obj.tmpXData = obj.xFunc(startAt,endAt); %global index
             obj.tmpYData = obj.yFunc(startAt,endAt); %global index
-            obj.onPlotDraw(handles);        
+            obj.onPlotDraw();        
         end
                 
-        function onXRange(obj,handles,from,to)
+        function onXRange(obj,from,to)
             if obj.plotType ~= SegPlotType.PolarScatter
-                handles.axes_plot.XLim = [from,to];
+                obj.figHandles.axes_plot.XLim = [from,to];
             end
             
             if obj.isHoldingPlot
-                obj.onHoldRange(handles.btn_hold,handles.axes_plot);
+                obj.onHoldRange();
             end
                 
         end
         
-        function onYRange(obj,handles,from,to)
+        function onYRange(obj,from,to)
             if obj.plotType ~= SegPlotType.PolarScatter
-                handles.axes_plot.YLim = [from,to];
+                obj.figHandles.axes_plot.YLim = [from,to];
             end
             
             if obj.isHoldingPlot
-                obj.onHoldRange(handles.btn_hold,handles.axes_plot);
+                obj.onHoldRange();
             end
         end
         
-        function onHoldRange(obj,hBtn,hPlot)
+        function onHoldRange(obj)
+            hBtn = obj.figHandles.btn_hold;
+            hPlot = obj.figHandles.axes_plot;
             if isempty(obj.holdPlotRange)
                 hBtn.BackgroundColor = [0.47,0.67,0.19];
                 obj.holdPlotRange = [hPlot.XLim;hPlot.YLim];
@@ -236,7 +247,9 @@ classdef SegShow < handle
             end
         end
         
-        function onHoldTrace(obj,hBtn,hPlot)
+        function onHoldTrace(obj)
+            hBtn = obj.figHandles.btn_holdTrace;
+            hPlot = obj.figHandles.axes_main;
             if isempty(obj.holdLeftRange)
                 hBtn.BackgroundColor = [0.47,0.67,0.19];
                 obj.holdLeftRange = hPlot.XLim;
@@ -246,34 +259,34 @@ classdef SegShow < handle
             end
         end
         
-        function onPlotTypeSelected(obj,type,handles)
+        function onPlotTypeSelected(obj,type)
             switch(type)
                 case 1
                     obj.plotType = SegPlotType.NormalPlot;
-                    handles.pop_yData.Enable = 'on';
+                    obj.figHandles.pop_yData.Enable = 'on';
                     if obj.isActivePlot
-                        obj.onActivePlot(handles.btn_active);
+                        obj.onActivePlot();
                     end
-                    handles.btn_active.Enable = 'off';
+                    obj.figHandles.btn_active.Enable = 'off';
 %                     if obj.hPa
 %                         obj.hPa.Visible = 'off';
 %                     end
 %                     handles.axes_plot.Visible = 'on';
                 case 2
                     obj.plotType = SegPlotType.NormalScatter;
-                    handles.pop_yData.Enable = 'on';
+                    obj.figHandles.pop_yData.Enable = 'on';
                     if obj.isActivePlot
-                        obj.onActivePlot(handles.btn_active);
+                        obj.onActivePlot();
                     end
-                    handles.btn_active.Enable = 'off';
+                    obj.figHandles.btn_active.Enable = 'off';
 %                     if obj.hPa
 %                         obj.hPa.Visible = 'off';
 %                     end
 %                     handles.axes_plot.Visible = 'on';
                 case 3
                     obj.plotType = SegPlotType.PolarScatter;
-                    handles.pop_yData.Enable = 'on';
-                    handles.btn_active.Enable = 'on';
+                    obj.figHandles.pop_yData.Enable = 'on';
+                    obj.figHandles.btn_active.Enable = 'on';
 %                     if isempty(obj.hPa)
 %                         obj.hPa = polaraxes('Parent',handles.figure1,...
 %                                             'Position',handles.axes_plot.Position);
@@ -282,23 +295,23 @@ classdef SegShow < handle
 %                     obj.hPa.Visible = 'on';
                 case 4
                     obj.plotType = SegPlotType.Histogram;
-                    handles.pop_yData.Enable = 'off';
+                    obj.figHandles.pop_yData.Enable = 'off';
                     if obj.isActivePlot
-                        obj.onActivePlot(handles.btn_active);
+                        obj.onActivePlot();
                     end
-                    handles.btn_active.Enable = 'off';
+                    obj.figHandles.btn_active.Enable = 'off';
 %                     if obj.hPa
 %                         obj.hPa.Visible = 'off';
 %                     end
 %                     handles.axes_plot.Visible = 'on';
             end
             if obj.isHoldingPlot
-                obj.onHoldRange(handles.btn_hold,handles.axes_plot);
+                obj.onHoldRange();
             end
-            obj.onPlotDraw(handles);
+            obj.onPlotDraw();
         end
         
-        function onXDataType(obj,type,handles)
+        function onXDataType(obj,type)
             switch(type)
                 case 1
                     type = SegAxisData.Velocity;
@@ -316,10 +329,10 @@ classdef SegShow < handle
             obj.xFunc = obj.dataEnum2func(type);
             obj.tmpXData = obj.xFunc(obj.selectIndices(1),obj.selectIndices(2));
             obj.xlabelName = SegShow.dataEnum2name(type);
-            obj.onPlotDraw(handles);
+            obj.onPlotDraw();
         end
         
-        function onYDataType(obj,type,handles)
+        function onYDataType(obj,type)
              switch(type)
                 case 1
                     type = SegAxisData.Velocity;
@@ -337,40 +350,48 @@ classdef SegShow < handle
             obj.yFunc = obj.dataEnum2func(type);
             obj.tmpYData = obj.yFunc(obj.selectIndices(1),obj.selectIndices(2));
             obj.ylabelName = SegShow.dataEnum2name(type);
-            obj.onPlotDraw(handles);
+            obj.onPlotDraw();
         end
         
-        function onSwitchMain(obj,handles,index)
+        function onSwitchMain(obj,index)
             if index == obj.activeIndex
                 return;
             end
             obj.activeIndex = index;
             if index == 1
-                handles.btn_curFigIndicator_1.BackgroundColor = [0.47,0.67,0.19];
-                handles.btn_curFigIndicator_2.BackgroundColor = [0.85,0.33,0.1];
+                obj.figHandles.btn_curFigIndicator_1.BackgroundColor = [0.47,0.67,0.19];
+                obj.figHandles.btn_curFigIndicator_2.BackgroundColor = [0.85,0.33,0.1];
             else
-                handles.btn_curFigIndicator_2.BackgroundColor = [0.47,0.67,0.19];
-                handles.btn_curFigIndicator_1.BackgroundColor = [0.85,0.33,0.1];
+                obj.figHandles.btn_curFigIndicator_2.BackgroundColor = [0.47,0.67,0.19];
+                obj.figHandles.btn_curFigIndicator_1.BackgroundColor = [0.85,0.33,0.1];
             end
             if ~isempty(obj.selectIndices)
                 obj.selectFrom = obj.absIndex2groundIndex(obj.selectIndices(1));
                 obj.selectTo = obj.absIndex2groundIndex(obj.selectIndices(2));
-                handles.edt_segFrom.String = num2str(obj.selectFrom);
-                handles.edt_segTo.String = num2str(obj.selectTo);
-                obj.onSegSelect(handles,max(obj.selectFrom,1),...
-                                        min(obj.selectTo,length(obj.segRes{index}.resCell)));
+                obj.figHandles.edt_segFrom.String = num2str(obj.selectFrom);
+                obj.figHandles.edt_segTo.String = num2str(obj.selectTo);
+                obj.onSegSelect(max(obj.selectFrom,1),min(obj.selectTo,length(obj.segRes{index}.resCell)));
             end
         end
         
-        function onActivePlot(obj,hBtn,handles)
+        function onActivePlot(obj)
+            hBtn = obj.figHandles.btn_active;
             if obj.isActivePlot
                 hBtn.BackgroundColor = [1,1,1];
                 obj.isActivePlot = false;
             else
                 hBtn.BackgroundColor = [0.47,0.67,0.19];
                 obj.isActivePlot = true;
-                obj.onPlotDraw(handles);
+                obj.onPlotDraw();
             end
+        end
+        
+        function setFigHandles(obj,handles)
+            obj.figHandles = handles;
+        end
+        
+        function hF = getFigHandles(obj)
+            hF = obj.figHandles;
         end
     end
     
@@ -437,20 +458,6 @@ classdef SegShow < handle
                 n = n+1;
             end
             close(hBar);
-%             L = length(obj.segRes.resCell);
-%             plotData = [];
-%             for m = 1:1:L
-%                 data = obj.segRes.resCell{m};
-%                 if (data(4)+obj.offset-1) <= startAt
-%                     continue;
-%                 elseif and((data(3)+obj.offset-1)>= startAt,...
-%                            (data(4)+obj.offset-1)<=endAt)
-%                     trace = obj.xy(startAt:endAt,:);
-%                     plotData = [plotData,SegShow.trace2dff(trace)];
-%                 elseif (data(3)+obj.offset-1)>= startAt
-%                      break;
-%                 end
-%             end
         end
         function plotData = getDiff(obj,startAt,endAt)
             plotData  = obj.cachedDiffAlphaCell{obj.activeIndex}(startAt:endAt,1);
@@ -493,22 +500,30 @@ classdef SegShow < handle
                 case SegAxisData.HistDiff
                     nameStr = 'Diffusion Coefficient';
                 case SegAxisData.HistAlpha
-                    nameStr = '$\alpha$';
+                    nameStr = '\alpha';
                     
             end
         end
-        function d_al = trace2diffAlpha(xy)
+        function d_al = trace2diffAlpha(xy,varargin)
             L = length(xy);
-            lag = round(L/3);
+            lag = min(round(L/3),30);
             msd_curve = msd(xy,lag);
-            d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[0.1,1]);           
+            d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[0.1,1]);          
+            if ~isempty(varargin)
+                plot(subplot(1,2,1),xy(:,1),xy(:,2),'LineWidth',1.5);
+                plot(subplot(1,2,2),(1:1:lag)*0.07,msd_curve);
+                hold on;
+                plot((1:1:lag)*0.07,4*d_al(1)*power((1:1:lag)*0.07,d_al(2)),'r--');
+                title(sprintf('D: %.3f,\\alpha: %.3f',d_al(1),d_al(2)));
+                pause;
+            end
         end
         function alpha = trace2alpha(xy)
             L = length(xy);
             lag = round(L/3);
             msd_curve = msd(xy,lag);
             d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[0.1,1]);
-            alpha = d_al(2);
+            alpha = d_al(2);               
         end
     end
     

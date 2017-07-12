@@ -57,9 +57,10 @@ handles.output = hObject;
 handles.model = varargin{1};
 linkaxes([handles.axes_main,handles.axes_seg,...
           handles.axes_main_2,handles.axes_seg_2],'x');
-handles.model.onMainDraw(handles.axes_main,handles.axes_main_2);
-handles.model.onSegDraw(handles.axes_seg,handles.axes_seg_2);
-handles.model.onSwitchMain(handles,1);
+handles.model.setFigHandles(handles);
+handles.model.onMainDraw();
+handles.model.onSegDraw();
+handles.model.onSwitchMain(1);
 handles.btn_active.Enable = 'off';
 % Update handles structure
 guidata(hObject, handles);
@@ -90,7 +91,7 @@ try
 catch
     errordlg(sprintf('Failed Parse Input: %s',str));
 end
-handles.model.onSegFrom(num,handles);
+handles.model.onSegFrom(num);
 % Hints: get(hObject,'String') returns contents of edt_segFrom as text
 %        str2double(get(hObject,'String')) returns contents of edt_segFrom as a double
 
@@ -116,7 +117,7 @@ try
 catch
     errordlg(sprintf('Failed Parse Input: %s',str));
 end
-handles.model.onSegTo(num,handles);
+handles.model.onSegTo(num);
 % Hints: get(hObject,'String') returns contents of edt_segTo as text
 %        str2double(get(hObject,'String')) returns contents of edt_segTo as a double
 
@@ -142,7 +143,7 @@ if isempty(strfind(str,' '))
 else
     str = strsplit(str,' ');
     try
-        handles.model.onYRange(handles,str2double(str{1}),str2double(str{2}));
+        handles.model.onYRange(str2double(str{1}),str2double(str{2}));
     catch
         errordlg('Failed Parse Input: %s',str);
     end
@@ -174,7 +175,7 @@ if isempty(strfind(str,' '))
 else
     strs = strsplit(str,' ');
     try
-        handles.model.onXRange(handles,str2double(strs{1}),str2double(strs{2}));
+        handles.model.onXRange(str2double(strs{1}),str2double(strs{2}));
     catch
         errordlg(sprintf('Failed Parse Input: %s',str));
     end
@@ -200,7 +201,7 @@ function btn_copy_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_copy (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onCopyFig(handles.axes_plot);
+handles.model.onCopyFig();
 
 % --- Executes during object creation, after setting all properties.
 function btn_copy_CreateFcn(hObject, eventdata, handles)
@@ -214,7 +215,7 @@ function btn_hold_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_hold (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onHoldRange(hObject,handles.axes_plot);
+handles.model.onHoldRange();
 
 
 % --- Executes on button press in btn_curFigIndicator_1.
@@ -222,14 +223,14 @@ function btn_curFigIndicator_1_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_curFigIndicator_1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onSwitchMain(handles,1);
+handles.model.onSwitchMain(1);
 
 % --- Executes on button press in btn_curFigIndicator_2.
 function btn_curFigIndicator_2_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_curFigIndicator_2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onSwitchMain(handles,2);
+handles.model.onSwitchMain(2);
 
 
 % --- Executes on button press in btn_fromLast.
@@ -237,7 +238,7 @@ function btn_fromLast_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_fromLast (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onSegFrom(handles.model.selectFrom-1,handles);
+handles.model.onSegFrom(handles.model.selectFrom-1);
 
 
 % --- Executes on button press in btn_fromNext.
@@ -245,21 +246,21 @@ function btn_fromNext_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_fromNext (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onSegFrom(handles.model.selectFrom+1,handles);
+handles.model.onSegFrom(handles.model.selectFrom+1);
 
 % --- Executes on button press in btn_toLast.
 function btn_toLast_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_toLast (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onSegTo(handles.model.selectTo-1,handles);
+handles.model.onSegTo(handles.model.selectTo-1);
 
 % --- Executes on button press in btn_toNext.
 function btn_toNext_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_toNext (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onSegTo(handles.model.selectTo+1,handles);
+handles.model.onSegTo(handles.model.selectTo+1);
 
 
 % --- Executes on selection change in pop_xData.
@@ -267,7 +268,7 @@ function pop_xData_Callback(hObject, eventdata, handles)
 % hObject    handle to pop_xData (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onXDataType(get(hObject,'Value'),handles);
+handles.model.onXDataType(get(hObject,'Value'));
 % Hints: contents = cellstr(get(hObject,'String')) returns pop_xData contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from pop_xData
 
@@ -290,7 +291,7 @@ function pop_yData_Callback(hObject, eventdata, handles)
 % hObject    handle to pop_yData (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onYDataType(get(hObject,'Value'),handles);
+handles.model.onYDataType(get(hObject,'Value'));
 % Hints: contents = cellstr(get(hObject,'String')) returns pop_yData contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from pop_yData
 
@@ -320,7 +321,7 @@ v = get(hObject,'Value');
 %     handles.axes_plot = polaraxes('Parent',handles.figure1,'Position',tmpP);
 %     guidata(hObject,handles);
 % end
-handles.model.onPlotTypeSelected(v,handles);
+handles.model.onPlotTypeSelected(v);
 % Hints: contents = cellstr(get(hObject,'String')) returns pop_plotType contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from pop_plotType
 
@@ -343,7 +344,7 @@ function btn_holdTrace_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_holdTrace (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onHoldTrace(hObject,handles.axes_main);
+handles.model.onHoldTrace();
 
 
 % --- Executes on button press in btn_active.
@@ -351,4 +352,4 @@ function btn_active_Callback(hObject, eventdata, handles)
 % hObject    handle to btn_active (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.model.onActivePlot(hObject,handles);
+handles.model.onActivePlot();
