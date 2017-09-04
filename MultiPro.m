@@ -62,6 +62,11 @@ classdef MultiPro < handle
             
             [newLength,newDim] = size(data);
             
+            if size(xy,1) ~= newLength
+                disp('Inconsistance in length of XY and data');
+                return;
+            end
+            
             if or(obj.dataDim == newDim,obj.dataDim == 0)
                 obj.dataDim = newDim;
                 obj.particleIds{end+1} = id;
@@ -147,6 +152,8 @@ classdef MultiPro < handle
                         aFun = @(raw,tau,D)vecs2MSD(raw,D);
                     case 'multi'
                         aFun = @(raw,tau,D)multiVar2CM(raw,tau,D);
+                    case 'autoc'
+                        aFun = @(raw,tau,D)vecs2autoCorr(raw,D,tau);
                 end
                 
                 for m = 1:1:obj.particleNum
@@ -179,13 +186,14 @@ classdef MultiPro < handle
                 obj.pResult = cell(obj.particleNum,1);     
                 for m = 1:1:obj.particleNum
                     obj.pResult{m} = NPMotionTest(obj.param.method,obj.getTrace(m),...
+                                                  obj.getData(m),...
                                                   obj.getSecData(m),...
                                                   obj.getSecIndex(m),...
                                                   obj.secondaryHeader(m),...
                                                   obj.kMeansCentrality,...
                                                   obj.velocityCell{m},...
                                                   obj.param.timeDelay,...
-                                                  obj.param.dim,...
+                                                  obj.param.timeDelay,...
                                                   obj.param.k);
                 end
                 
