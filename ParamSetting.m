@@ -1,6 +1,6 @@
 function varargout = ParamSetting(varargin)
 
-% Last Modified by GUIDE v2.5 11-Feb-2017 15:32:08
+% Last Modified by GUIDE v2.5 03-Sep-2017 21:46:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -30,7 +30,7 @@ function ParamSetting_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to ParamSetting (see VARARGIN)
 
-if varargin{1} > 1
+if varargin{1} >= 0
     set(handles.STX_info,'String',strcat(num2str(varargin{1}),32,'Particles are to Process'));
 end
 handles.index = 0;
@@ -314,6 +314,7 @@ if get(hObject,'Value')
 	handles.param.method = 'uni';
 	set(handles.RBT_MSD,'Value',0);
 	set(handles.RBT_Cor,'Value',0);
+    set(handles.RBT_autoCorr,'Value',0);
 	handles.param.isValid(1) = 1;
     set(handles.EDT_timeDelay,'Enable','on');
 else
@@ -333,6 +334,7 @@ if get(hObject,'Value')
 	handles.param.method = 'msd';
 	set(handles.RBT_Uni,'Value',0);
 	set(handles.RBT_Cor,'Value',0);
+    set(handles.RBT_autoCorr,'Value',0);
 	handles.param.isValid(1) = 1;
     handles.param.timeDelay = 0;
 	handles.param.isValid(2) = 1;
@@ -354,6 +356,7 @@ if get(hObject,'Value')
 	handles.param.method = 'multi';
 	set(handles.RBT_Uni,'Value',0);
 	set(handles.RBT_MSD,'Value',0);
+    set(handles.RBT_autoCorr,'Value',0);
 	handles.param.isValid(1) = 1;
     set(handles.EDT_timeDelay,'Enable','on');
 else
@@ -392,3 +395,23 @@ function EDT_OptReapeat_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in RBT_autoCorr.
+function RBT_autoCorr_Callback(hObject, eventdata, handles)
+% hObject    handle to RBT_autoCorr (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(hObject,'Value')
+	handles.param.method = 'autoc';
+	set(handles.RBT_Uni,'Value',0);
+	set(handles.RBT_Cor,'Value',0);
+    set(handles.RBT_MSD,'Value',0);
+	handles.param.isValid(1) = 1;
+    set(handles.EDT_timeDelay,'Enable','on');
+else
+	handles.param.isValid(1) = 0;
+    set(handles.EDT_timeDelay,'Enable','off');
+end
+guidata(hObject,handles);
+% Hint: get(hObject,'Value') returns toggle state of RBT_autoCorr

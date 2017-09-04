@@ -42,10 +42,12 @@ classdef NPMotionTest < handle
             figure;
             c = lines(obj.k + 1);
             if obj.dimension > 1
-                if ~strcmp(obj.analysisMethod,'msd')
-                    plot(1:1:obj.dimension,obj.centric(1,end:-1:1),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
-                else
+                if strcmp(obj.analysisMethod,'msd')
                     plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                elseif strcmp(obj.analysisMethod,'autoc')
+                    plot(0:1:obj.dimension,obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                else
+                    plot(1:1:obj.dimension,obj.centric(1,end:-1:1),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);     
                 end                 
             else
                 scatter(1,obj.centric(1),30,c(2,:),'filled','DisplayName','Group:1');
@@ -53,10 +55,12 @@ classdef NPMotionTest < handle
             hold on;
             for m = 2:1:obj.k
                 if obj.dimension > 1
-                    if ~strcmp(obj.analysisMethod,'msd')
-                        plot(1:1:obj.dimension,obj.centric(m,end:-1:1),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
-                    else
+                    if strcmp(obj.analysisMethod,'msd')
                         plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                    elseif strcmp(obj.analysisMethod,'autoc')
+                        plot(0:1:obj.dimension,obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                    else
+                        plot(1:1:obj.dimension,obj.centric(m,end:-1:1),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
                     end 
                 else
                     scatter(1,obj.centric(m),30,c(m+1,:),'filled','DisplayName',strcat('Group:',num2str(m)));
@@ -64,7 +68,11 @@ classdef NPMotionTest < handle
             end
             hold off;
             box on;
-            xlim([1,obj.dimension]);
+            if strcmp(obj.analysisMethod,'autoc')
+                xlim([0,obj.dimension])
+            else
+                xlim([1,obj.dimension]);
+            end
             if ~strcmp(obj.analysisMethod,'msd')
                 xlabel('Ordered Time-dependent Feature Vector');
             else

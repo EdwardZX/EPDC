@@ -30,13 +30,14 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,optTime,isSpeak,
         case 'uni'
             if size(rawData,2) > 1
                 error('Too many variable input for univaribale analysis!');
-                return;
             end
             aFun = @(raw,tau,D)rcTimeDelaySet(raw,tau,D);
         case 'msd'
             aFun = @(raw,tau,D)vecs2MSD(raw,D);
         case 'multi'
             aFun = @(raw,tau,D)multiVar2CM(raw,tau,D);
+        case 'autoc'
+            aFun = @(raw,tau,D)vecs2autoCorr(raw,D,tau);
     end
 
     velocity = zeros(size(xy,1),1);
@@ -49,7 +50,11 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,optTime,isSpeak,
         else
           [I,C,~] = optKMeans(data,param(m,3),comd,param(m,4),optTime,varargin{1});
         end
-        result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
+        if strcmp(analysisMethod,'autoc')
+            result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,velocity,param(m,2),param(m,1),param(m,3));
+        else
+            result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
+        end
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
         if isSpeak
             if strcmp(analysisMethod,'uni')
