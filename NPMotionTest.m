@@ -11,7 +11,8 @@ classdef NPMotionTest < handle
         realIndex;
         indexTag;
         centric;
-        rawData
+        rawData;
+        probMat;
     end
     
     properties (Access = private)
@@ -23,7 +24,7 @@ classdef NPMotionTest < handle
     end
      
     methods
-        function obj = NPMotionTest(analysisMethod,xy,raw,resultData,indexTag,header,centric,velocity,tau,D,k)
+        function obj = NPMotionTest(analysisMethod,xy,raw,resultData,indexTag,header,centric,velocity,tau,D,k,prob)
             obj.timeDelay = tau;
             obj.dimension = D;
             obj.k = k;
@@ -36,6 +37,7 @@ classdef NPMotionTest < handle
             obj.realIndex = header:1:(size(resultData,1) + header - 1);
             obj.centric = centric;
             obj.rawData = raw;
+            obj.probMat = prob;
         end     
         % plotC: plot centric in one axes
         function h = plotC(obj)
@@ -276,6 +278,19 @@ classdef NPMotionTest < handle
             subplot(2,1,2);
             tmp.plotTest(gca,obj.velocity);
             title(strcat('Origin class result, optimization times:',32,num2str(optTime)));
+        end
+        
+        function nanProbUnder(obj,thres)
+            maxProb = max(obj.probMat);
+            obj.indexTag(maxProb<thres) = nan;
+        end
+        
+        function plotProb(obj)
+            figure; hold on;
+            c = lines(obj.k+1);
+            for m = 1:1:obj.k
+                plot(obj.probMat(m,:),'Color',c(m+1,:),'LineWidth',1);
+            end
         end
     end    
     
