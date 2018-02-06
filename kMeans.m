@@ -1,6 +1,6 @@
 % Hansen Zhao : zhaohs12@163.com
-% 2016/12/2 : version 2.1
-function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin )
+% 2017/11/10 : version 3.1
+function [ indexTag, finalCentric, Distance, probability ] = kMeans( dataSet,k,comd,varargin )
 
     if nargin <= 4
         isCheckMemberNum = false;
@@ -13,14 +13,14 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
     order = 0;
     switch comd
         case 'E'
-            fun = @(c,d,p)pdist2(c,d,'squaredeuclidean','Smallest',1);
+            fun = @(c,d,p)pdist2(c,d,'squaredeuclidean');
         case 'V'
-            fun = @(c,d,p)pdist2(c,d,'cosin','Smallest',1);
+            fun = @(c,d,p)pdist2(c,d,'cosin');
         case 'M'
             order = varargin{1};
-            fun = @(c,d,p)pdist2(c,d,'minkowski',p,'Smallest',1);
+            fun = @(c,d,p)pdist2(c,d,'minkowski',p);
         case 'C'
-            fun = @(c,d,p)pdist2(c,d,'correlation','Smallest',1);
+            fun = @(c,d,p)pdist2(c,d,'correlation');
     end
     centricSet = zeros(k,dimension);
     newCentricSet = zeros(k,dimension);
@@ -32,7 +32,9 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
 
     
     while (iterationTime < 3000)
-        [D,indexTag] = fun(centricSet,dataSet,order);
+        D = fun(centricSet,dataSet,order);
+        [d,indexTag] = min(D); indexTag = indexTag';
+        probability = distance2prob(D);
 
         for m = 1:1:k
             newCentricSet(m,:) = mean(dataSet(indexTag==m,:));
@@ -60,13 +62,15 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
                     I,x,threshold);
             filter = (indexTag==I);
             indexTag(filter) = nan;
-            [newTag,newC,newD] = kMeans(dataSet(~filter,:),k,comd,varargin{1},threshold);
+            [newTag,newC,newD,prob] = kMeans(dataSet(~filter,:),k,comd,varargin{1},threshold);
             indexTag(~filter) = newTag;
             finalCentric = newC;
             Distance = newD;
+            probability(:,~filter) = prob;
+            probability(filter) = nan;
             return;
         end
-
+    end
 %         for m = 1:1:k
 %             filter = (indexTag==m);
 %             memberCount = sum(filter);
@@ -83,15 +87,24 @@ function [ indexTag, finalCentric, Distance ] = kMeans( dataSet,k,comd,varargin 
 %                 return;
 %             end
 %         end
-    end
+
     
-    Distance = sum(D);
+    Distance = sum(d);
     finalCentric = newCentricSet;
 end
 
 function [M] = sortMatrix(M_I)
     [~,I] = sort(mean(M_I,2));
     M = M_I(I,:);
+end
+
+function prob = distance2prob(D)
+    % k-by-count Distance Matrix
+    minDistance = min(D);
+    k = size(D,1);
+    weight = exp(-D./repmat(minDistance,k,1));
+    weightSum = sum(weight);
+    prob = weight./repmat(weightSum,k,1);  
 end
 
 
