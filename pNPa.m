@@ -46,14 +46,16 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,optTime,isSpeak,
     for m=1:1:count
         [data,header] = aFun(rawData,param(m,1),param(m,2));
         if isempty(varargin)
-          [I,C,~] = optKMeans(data,param(m,3),comd,param(m,4),optTime);
+          [I,C,~,prob] = optKMeans(data,param(m,3),comd,param(m,4),optTime);
         else
-          [I,C,~] = optKMeans(data,param(m,3),comd,param(m,4),optTime,varargin{1});
+          [I,C,~,prob] = optKMeans(data,param(m,3),comd,param(m,4),optTime,varargin{1});
         end
         if strcmp(analysisMethod,'autoc')
-            result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,velocity,param(m,2),param(m,1),param(m,3));
+            result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,...
+                                     velocity,param(m,2),param(m,1),param(m,3),prob);
         else
-            result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,velocity,param(m,1),param(m,2),param(m,3));
+            result{m} = NPMotionTest(analysisMethod,xy,rawData,data,I,header,C,...
+                                     velocity,param(m,1),param(m,2),param(m,3),prob);
         end
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
         if isSpeak
