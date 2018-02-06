@@ -505,11 +505,26 @@ classdef SegShow < handle
             end
         end
         function d_al = trace2diffAlpha(xy,varargin)
+            if ~isempty(varargin)
+                isDisp = true;
+            else
+                isDisp = false;
+            end
             L = length(xy);
             lag = min(round(L/3),30);
             msd_curve = msd(xy,lag);
-            d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[0.1,1]);          
-            if ~isempty(varargin)
+            try
+                d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[1,1]);     
+                if or(d_al(1)<0,d_al(1)>1) || or(d_al(2)<0,d_al(2)>2.5)
+                    fprintf(1,'failure d: %.3f, alpha: %.3f\n',d_al(1),d_al(2));
+                    error('d');
+                end
+            catch
+                b = polyfit(log((1:lag)'*0.07),log(msd_curve),1);
+                d_al = [exp(b(2))/4,b(1)];
+                %isDisp = true;
+            end
+            if isDisp
                 plot(subplot(1,2,1),xy(:,1),xy(:,2),'LineWidth',1.5);
                 plot(subplot(1,2,2),(1:1:lag)*0.07,msd_curve);
                 hold on;
