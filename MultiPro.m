@@ -15,6 +15,7 @@ classdef MultiPro < handle
         secondaryLength;
         secondaryHeader;
         secondaryIndex;
+        prob;
         kMeansCentrality;
         param;
     end
@@ -132,7 +133,12 @@ classdef MultiPro < handle
         
         function data = getSecIndex(obj,num)
             [a,b] = obj.pNum2pRegion(num,2);
-            data = obj.secondaryIndex(1,a:b);            
+            data = obj.secondaryIndex(a:b);            
+        end
+        
+        function data = getSecProb(obj,num)
+            [a,b] = obj.pNum2pRegion(num,2);
+            data = obj.prob(:,a:b); 
         end
         
         function process(obj,varargin)
@@ -177,7 +183,7 @@ classdef MultiPro < handle
                     threshold = varargin{1};
                 end
                 [obj.secondaryIndex,...
-                 obj.kMeansCentrality,~] = optKMeans(obj.secondaryData,obj.param.k,...
+                 obj.kMeansCentrality,~,obj.prob] = optKMeans(obj.secondaryData,obj.param.k,...
                                                      obj.param.distanceScale,...
                                                      obj.param.order,...
                                                      obj.param.optRepeat,threshold);
@@ -195,7 +201,8 @@ classdef MultiPro < handle
                                                       obj.velocityCell{m},...
                                                       obj.param.timeDelay,...
                                                       obj.param.timeDelay,...
-                                                      obj.param.k);
+                                                      obj.param.k,...
+                                                      obj.getSecProb(m));
                     else
                         obj.pResult{m} = NPMotionTest(obj.param.method,obj.getTrace(m),...
                                                       obj.getData(m),...
@@ -206,7 +213,8 @@ classdef MultiPro < handle
                                                       obj.velocityCell{m},...
                                                       obj.param.timeDelay,...
                                                       obj.param.dim,...
-                                                      obj.param.k);
+                                                      obj.param.k,...
+                                                      obj.getSecProb(m));
                     end
                 end
                 
