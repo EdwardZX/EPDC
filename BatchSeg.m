@@ -84,7 +84,7 @@ figure;
 ha = axes;
 boxplot(subplot(3,1,1),velocity,tags,'BoxStyle','filled','MedianStyle','target','symbol','')
 boxplot(subplot(3,1,2),polar,tags,'BoxStyle','filled','Color','r','MedianStyle','target','symbol','')
-plot(1:18,diff);
+plot(1:size(segs,1),diff);
 boxplot(subplot(3,1,2),polar,tags,'BoxStyle','filled','Color','r','MedianStyle','target','symbol','')
 plot(subplot(3,1,3),1:L,diff);
 plotyy(subplot(3,1,3),1:L,diff,1:L,alpha);
