@@ -190,6 +190,7 @@ classdef NPMotionTest < handle
             
             title(hAxes,strcat(obj.analysisMethod,32,'test for TimeDelay =',num2str(obj.timeDelay),' Dimension =',num2str(obj.dimension),' k =',num2str(obj.k)));
             hold off;
+            xlim([1,length(bgData)]);
         end      
         
         function [result,Index] = getResult(obj,varargin)
@@ -217,6 +218,9 @@ classdef NPMotionTest < handle
             if nargin == 3
                 minRange = varargin{1};
                 maxRange = varargin{2};
+            elseif nargin == 2
+                minRange = varargin{1};
+                maxRange = length(obj.velocity);
             else
                 minRange = obj.header;
                 maxRange = length(obj.velocity);
@@ -232,7 +236,7 @@ classdef NPMotionTest < handle
             minRange = obj.abs2rel(minRange);
             maxRange = obj.abs2rel(maxRange);
             data = obj.indexTag(minRange:maxRange);
-            dataLength = size(data,2);
+            dataLength = size(data,1);
             c = lines(obj.k + 1);
             counts(1) = sum(data==1);
             h = bar(1,counts(1) * 100/dataLength,'DisplayName','Group:1','BarWidth',1,'FaceColor',c(2,:));
