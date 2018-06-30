@@ -18,7 +18,7 @@ classdef SegShow < handle
         tmpYData
     end
     
-    properties(Access=private)
+    properties(SetAccess=private)
         tolerence,
         cm,
         I,
@@ -55,8 +55,8 @@ classdef SegShow < handle
             obj.xlabelName = SegShow.dataEnum2name(SegAxisData.Velocity);
             obj.ylabelName = SegShow.dataEnum2name(SegAxisData.Velocity);
             maxGroupNum = max([r1.k,r2.k]);
-            obj.cm = [0,0,0;lines(maxGroupNum+1)];
-            obj.cm(2,:) = [];
+            obj.cm = [0,0,0;0.8,0.8,0.8;lines(maxGroupNum+1)];
+            obj.cm(3,:) = [];
             obj.segRes = {tagSegFunc(r1.indexTag,obj.vel(r1.header:end),segTolerence,@(x)mean(x)),...
                           tagSegFunc(r2.indexTag,obj.vel(r2.header:end),segTolerence,@(x)mean(x))};
             obj.I = {SegShow.segCells2Index(obj.segRes{1}),...
@@ -484,7 +484,11 @@ classdef SegShow < handle
             L = length(segRes.resCell);
             for m = 1:1:L
                 data = segRes.resCell{m};
-                I(data(3):data(4)) = data(2);
+                if isnan(data(2))
+                     I(data(3):data(4)) = 1;
+                else
+                    I(data(3):data(4)) = data(2)+1;
+                end
             end
         end
         function nameStr = dataEnum2name(label)
@@ -505,17 +509,17 @@ classdef SegShow < handle
             end
         end
         function d_al = trace2diffAlpha(xy,varargin)
-            if ~isempty(varargin)
-                isDisp = true;
-            else
+            if isempty(varargin)
                 isDisp = false;
+            else
+                isDisp = varargin{1};
             end
             L = length(xy);
             lag = min(round(L/3),30);
             msd_curve = msd(xy,lag);
             try
                 d_al = nlinfit((1:lag)'*0.07,msd_curve,@(b,x)4*b(1)*power(x,b(2)),[1,1]);     
-                if or(d_al(1)<0,d_al(1)>1) || or(d_al(2)<0,d_al(2)>2.5)
+                if or(d_al(1)<0,d_al(1)>1e3) || or(d_al(2)<0,d_al(2)>2.5)
                     fprintf(1,'failure d: %.3f, alpha: %.3f\n',d_al(1),d_al(2));
                     error('d');
                 end
