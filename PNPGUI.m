@@ -68,7 +68,26 @@ classdef PNPGUI < handle
         function r = getR(obj)
             r = obj.pT;
         end
-
+        
+        function saveMovie(obj,varargin)
+            if nargin == 1
+                indexFrom = obj.pT.header; indexTo = obj.pT.realIndex(end);
+            elseif nargin == 2
+                indexFrom = varargin{1}; indexTo = obj.pT.realIndex(end);
+            else
+                indexFrom = varargin{1}; indexTo = varargin{2};
+            end
+            %obj.show();
+            v = EasyVideoWriter(obj.hFigure);
+            for m = indexFrom:indexTo
+                if obj.changePoint(m)
+                    v.ticVideo();
+                else
+                    v.endVideo();
+                end
+            end
+            v.endVideo();
+        end
     end
 
     methods (Access = private)
@@ -163,13 +182,15 @@ classdef PNPGUI < handle
             end
         end
 
-        function changePoint(obj,index)
+        function res = changePoint(obj,index)
             isValid = and(index >= obj.pT.header,index < obj.pT.realIndex(end));
             if isValid
                 obj.currentPointIndex = index;
                 obj.update();
+                res = 1;
             else
-                errordlg('Error: Invalid Point!','NP Analysis Container');                           
+                errordlg('Error: Invalid Point!','NP Analysis Container');
+                res = 0;
             end
         end
 
