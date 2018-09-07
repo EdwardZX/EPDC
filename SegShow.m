@@ -148,7 +148,11 @@ classdef SegShow < handle
             hPlot = obj.figHandles.axes_plot;
             hf = figure;
             ha = axes;
-            scatter(ha,hPlot.Children.XData,hPlot.Children.YData,15,'r','filled');
+            if and(strcmp(obj.xlabelName,'position x'),strcmp(obj.ylabelName,'position y'))
+                figure; plot(hPlot.Children(1).XData,hPlot.Children(1).YData)
+            else
+                scatter(ha,hPlot.Children.XData,hPlot.Children.YData,15,'r','filled');
+            end
             xlim( hPlot.XLim);
             ylim (hPlot.YLim);
             xlabel(obj.xlabelName);

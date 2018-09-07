@@ -108,4 +108,3 @@ function prob = distance2prob(D)
 end
 
 
-

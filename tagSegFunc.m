@@ -12,7 +12,11 @@ function [res] = tagSegFunc(tags,dataMat,vision,func,varargin)
     bug.stageStepNum = 1;
     bug.curState = tags(1);
     for m = 1:1:L
-        furtherStage = sum(tags((m+1):(m+vision)) == bug.curState);
+        if isnan(bug.curState)
+            furtherStage = sum(isnan(tags((m+1):(m+vision))));
+        else
+            furtherStage = sum(tags((m+1):(m+vision)) == bug.curState);
+        end
         if furtherStage > 0
             % stay current stage
             bug.stageStepNum = bug.stageStepNum + 1;

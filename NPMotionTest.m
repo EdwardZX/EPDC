@@ -40,39 +40,44 @@ classdef NPMotionTest < handle
             obj.probMat = prob;
         end     
         % plotC: plot centric in one axes
-        function h = plotC(obj)
-            figure;
-            c = lines(obj.k + 1);
+        function h = plotC(obj,h,c)
+            if ~exist('h','var')
+                h = figure;
+            end
+            if ~exist('c','var')
+                c = lines(obj.k + 1);
+                c(1,:) = [];
+            end
             if obj.dimension > 1
                 if strcmp(obj.analysisMethod,'msd')
-                    plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                    plot(obj.centric(1,:),'DisplayName','Group:1','Color',c(1,:),'LineWidth',3);
                 elseif strcmp(obj.analysisMethod,'autoc')
-                    plot(0:1:obj.dimension,obj.centric(1,:),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);
+                    plot(0:1:obj.dimension,obj.centric(1,:),'DisplayName','Group:1','Color',c(1,:),'LineWidth',3);
                 else
-                    plot(1:1:obj.dimension,obj.centric(1,end:-1:1),'DisplayName','Group:1','Color',c(2,:),'LineWidth',3);     
+                    plot(1:1:obj.dimension,obj.centric(1,end:-1:1),'DisplayName','Group:1','Color',c(1,:),'LineWidth',3);     
                 end                 
             else
-                scatter(1,obj.centric(1),30,c(2,:),'filled','DisplayName','Group:1');
+                scatter(1,obj.centric(1),30,c(1,:),'filled','DisplayName','Group:1');
             end
             hold on;
             for m = 2:1:obj.k
                 if obj.dimension > 1
                     if strcmp(obj.analysisMethod,'msd')
-                        plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                        plot(obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m,:),'LineWidth',3);
                     elseif strcmp(obj.analysisMethod,'autoc')
-                        plot(0:1:obj.dimension,obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                        plot(0:1:obj.dimension,obj.centric(m,:),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m,:),'LineWidth',3);
                     else
-                        plot(1:1:obj.dimension,obj.centric(m,end:-1:1),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m+1,:),'LineWidth',3);
+                        plot(1:1:obj.dimension,obj.centric(m,end:-1:1),'DisplayName',strcat('Group:',num2str(m)),'Color',c(m,:),'LineWidth',3);
                     end 
                 else
-                    scatter(1,obj.centric(m),30,c(m+1,:),'filled','DisplayName',strcat('Group:',num2str(m)));
+                    scatter(1,obj.centric(m),30,c(m,:),'filled','DisplayName',strcat('Group:',num2str(m)));
                 end
             end
             hold off;
             box on;
             if strcmp(obj.analysisMethod,'autoc')
                 xlim([0,obj.dimension])
-            else
+            elseif obj.dimension > 1
                 xlim([1,obj.dimension]);
             end
             if ~strcmp(obj.analysisMethod,'msd')
@@ -175,7 +180,7 @@ classdef NPMotionTest < handle
             if size(bgData,2) > 1
                 bgData = obj.velocity;
             end
-            plot(hAxes,bgData,'DisplayName','velocity of NP');
+            plot(hAxes,bgData,'Color',[0.8,0.8,0.8],'DisplayName','velocity of NP');
             hold on;
             markerSize = 10;
             if nargin == 4
@@ -239,7 +244,7 @@ classdef NPMotionTest < handle
             dataLength = size(data,1);
             c = lines(obj.k + 1);
             counts(1) = sum(data==1);
-            h = bar(1,counts(1) * 100/dataLength,'DisplayName','Group:1','BarWidth',1,'FaceColor',c(2,:));
+            bar(1,counts(1) * 100/dataLength,'DisplayName','Group:1','BarWidth',1,'FaceColor',c(2,:));
             hold on;
             for m = 2:1:obj.k
                 counts(m) = sum(data==m);
@@ -250,6 +255,7 @@ classdef NPMotionTest < handle
             title(['Histogram of the count of different Group from time index ' num2str(tmpMin) ' to ' num2str(tmpMax)]);
             set(gca,'XTick',1:1:obj.dimension);
             hold off;
+            h = gca;
         end
         function plotEmpTrace(obj,groupIndex,varargin)
             if isempty(varargin)

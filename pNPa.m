@@ -58,12 +58,14 @@ function [ result ] = pNPa(xy,rawData,analysisMethod,param,comd,optTime,isSpeak,
                                      velocity,param(m,1),param(m,2),param(m,3),prob);
         end
         disp(strcat(num2str(m),' / ',num2str(count),' has been done!'));
-        if isSpeak
-            tData = tsne(data);
-            figure; scatter(tData(:,1),tData(:,2),5,'filled'); hold on;
-            for h = 1:param(m,3)
-                scatter(tData(I==h,1),tData(I==h,2),5,'filled');
-            end
+        if isSpeak        
+%             if param(m,2) >= 2
+%                 tData = tsne(data);
+%                 figure; scatter(tData(:,1),tData(:,2),5,'filled'); hold on; 
+%                 for h = 1:param(m,3)
+%                     scatter(tData(I==h,1),tData(I==h,2),5,'filled');
+%                 end
+%             end
             if strcmp(analysisMethod,'uni')
                 result{m}.plot(rawData);
             else

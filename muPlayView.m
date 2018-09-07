@@ -22,7 +22,7 @@ function varargout = muPlayView(varargin)
 
 % Edit the above text to modify the response to help muPlayView
 
-% Last Modified by GUIDE v2.5 19-Mar-2018 11:36:39
+% Last Modified by GUIDE v2.5 19-Mar-2018 13:55:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

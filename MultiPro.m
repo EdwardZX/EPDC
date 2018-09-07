@@ -243,7 +243,10 @@ classdef MultiPro < handle
             hHBox.Widths = [-3,-1];
             for m = 1:1:obj.particleNum
                 tmpH = axes('Parent',hVBoxL);
-                obj.pResult{m}.plotTest(tmpH,obj.pResult{m}.velocity);
+                obj.pResult{m}.plotTest(tmpH,obj.pResult{m}.rawData);
+                if m ~= obj.particleNum
+                    tmpH.XTick = [];
+                end
                 title(strcat('Parent:',32,obj.particleIds{m}));
             end
             
